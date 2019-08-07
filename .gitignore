@@ -5,6 +5,7 @@
 /docker-compose.override.yml
 /var/
 /vendor/
+*.exe
 
 # IDE integration
 /.vscode/*
