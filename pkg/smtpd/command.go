@@ -21,8 +21,8 @@ type cmdDescription struct {
 var listOfValidCommands = map[string]cmdDescription{
 	"HELO": {1, true, []string{""}},
 	"EHLO": {1, true, []string{""}},
-	"MAIL": {1, true, []string{"TO"}},
-	"RCPT": {1, true, []string{"FROM"}},
+	"MAIL": {1, true, []string{"FROM"}},
+	"RCPT": {1, true, []string{"TO"}},
 	"DATA": {0, true, []string{}},
 	"NOOP": {0, false, []string{}},
 	"RSET": {0, true, []string{}},
@@ -50,7 +50,7 @@ func ParseCommand(cmd string) (*Command, *Response) {
 		return nil, &Response{501, "Syntax error in parameters or arguments"}
 	}
 
-	command := &Command{FullCmd: cmd, Name: name}
+	command := &Command{FullCmd: cmd, Name: name, PositionalArgs: []string{}, NamedArgs: map[string]string{}}
 
 	for i, arg := range elmts {
 		argName := desc.argumentNames[i]

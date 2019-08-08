@@ -25,7 +25,7 @@ type Transaction struct {
 }
 
 // NewTransaction creates a new SMTP transaction with initial state set to TSInitiated
-func NewTransaction(mailto string) *Transaction {
+func NewTransaction() *Transaction {
 	return &Transaction{State: TSInitiated}
 }
 
@@ -52,8 +52,8 @@ func (tr *Transaction) Data(data string) (*Response, error) {
 		tr.Mail.Content = &data
 		tr.State = TSCompleted
 		r := &Response{250, "OK"}
-		tr.History = append(tr.History, r.String())
 		tr.History = append(tr.History, ".")
+		tr.History = append(tr.History, r.String())
 		return r, nil
 	}
 	return nil, fmt.Errorf("TODO")
