@@ -12,12 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration with defaults settings, TOML envfile, environment variable
   or command line flags using package github.com/spf13/viper
 - Logging with github.com/goph/logur and github.com/sirupsen/logrus
-- Go tests
+- Go tests for every file
 - Dockerfile and docker-compose.yaml files
 - Makefile
 - Travis CI build configuration
+- Go releases with https://github.com/goreleaser/goreleaser
 - Complete documentation including README.md (https://www.writethedocs.org/)
 - LICENCE file (MIT License)
+- Code of conduct (https://www.contributor-covenant.org/)
 ### Planned for 1.1.0
+- Content of mail decoded for example with packages mime or net/mail
+- Addresses decoded for example with package net/mail
 - Healthcheck with github.com/InVisionApp/go-health
 - Gracefull restarts with github.com/cloudflare/tableflip
+- Extend API with search service
