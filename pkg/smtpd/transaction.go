@@ -29,9 +29,8 @@ func NewTransaction() *Transaction {
 	return &Transaction{State: TSInitiated}
 }
 
-// Update updates the status of the transaction according to the given SMTP command
-// and returns appropriate response
-func (tr *Transaction) Update(cmd *Command) (*Response, error) {
+// Process reads the given command, updates the transaction and returns appropriate response
+func (tr *Transaction) Process(cmd *Command) (*Response, error) {
 	if tr != nil {
 		tr.History = append(tr.History, cmd.FullCmd)
 		r, err := tr.handleCommand(cmd)
