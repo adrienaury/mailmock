@@ -105,6 +105,7 @@ func (s *Session) mail(cmd *Command) *Response {
 	if err != nil {
 		// TODO
 	}
+	s.state = SSBusy
 	return res
 }
 
