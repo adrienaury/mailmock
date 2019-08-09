@@ -2,7 +2,9 @@ package httpd
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/adrienaury/mailmock/internal/repository"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
@@ -34,9 +36,14 @@ func myRoutes() *chi.Mux {
 }
 
 func getOne(w http.ResponseWriter, r *http.Request) {
-	render.JSON(w, r, "TODO") // A chi router helper for serializing and returning json
+	trID := chi.URLParam(r, "ID")
+	i, err := strconv.ParseInt(trID, 10, 0)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+	}
+	render.JSON(w, r, repository.Use(int(i))) // A chi router helper for serializing and returning json
 }
 
 func getAll(w http.ResponseWriter, r *http.Request) {
-	render.JSON(w, r, "TODO") // A chi router helper for serializing and returning json
+	render.JSON(w, r, repository.All()) // A chi router helper for serializing and returning json
 }

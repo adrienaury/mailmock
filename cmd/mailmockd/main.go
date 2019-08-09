@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/adrienaury/mailmock/internal/httpd"
+	"github.com/adrienaury/mailmock/internal/repository"
 	"github.com/adrienaury/mailmock/pkg/smtpd"
 )
 
 var th smtpd.TransactionHandler = func(tr *smtpd.Transaction) {
-	fmt.Println(tr)
+	repository.Store(tr)
 }
 
 func main() {
