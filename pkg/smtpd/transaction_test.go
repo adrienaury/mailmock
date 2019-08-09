@@ -12,7 +12,7 @@ var (
 	MailCommand  smtpd.Command = smtpd.Command{Name: "MAIL", NamedArgs: map[string]string{"FROM": "sender@example.com"}, FullCmd: "MAIL FROM:<sender@example.com>"}
 	RcptCommand  smtpd.Command = smtpd.Command{Name: "RCPT", NamedArgs: map[string]string{"TO": "recipient@example.com"}, FullCmd: "RCPT TO:<recipient@example.com>"}
 	DataCommand  smtpd.Command = smtpd.Command{Name: "DATA", FullCmd: "DATA"}
-	MailData     string        = "Subject: test\n\nThis is the email body"
+	MailData     []string      = []string{"Subject: test", "", "This is the email body"}
 	OtherCommand smtpd.Command = smtpd.Command{Name: "FAKE", FullCmd: "FAKE"}
 )
 
@@ -51,49 +51,49 @@ func TestTransactionNominal(t *testing.T) {
 	assert.NotNil(t, res, "")
 	assert.Equal(t, int16(250), res.Code, "")
 	assert.Equal(t, smtpd.TSCompleted, tr.State, "")
-	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData, ".", "250 OK"}, tr.History, "")
-	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: &MailData}, tr.Mail, "")
+	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData[0], MailData[1], MailData[2], ".", "250 OK"}, tr.History, "")
+	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: MailData}, tr.Mail, "")
 
 	res, err = tr.Process(&OtherCommand)
 	assert.Error(t, err, "")
 	assert.Nil(t, res, "")
 	assert.Equal(t, smtpd.TSCompleted, tr.State, "")
-	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData, ".", "250 OK"}, tr.History, "")
-	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: &MailData}, tr.Mail, "")
+	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData[0], MailData[1], MailData[2], ".", "250 OK"}, tr.History, "")
+	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: MailData}, tr.Mail, "")
 
 	res, err = tr.Process(&MailCommand)
 	assert.Error(t, err, "")
 	assert.Nil(t, res, "")
 	assert.Equal(t, smtpd.TSCompleted, tr.State, "")
-	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData, ".", "250 OK"}, tr.History, "")
-	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: &MailData}, tr.Mail, "")
+	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData[0], MailData[1], MailData[2], ".", "250 OK"}, tr.History, "")
+	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: MailData}, tr.Mail, "")
 
 	res, err = tr.Process(&RcptCommand)
 	assert.Error(t, err, "")
 	assert.Nil(t, res, "")
 	assert.Equal(t, smtpd.TSCompleted, tr.State, "")
-	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData, ".", "250 OK"}, tr.History, "")
-	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: &MailData}, tr.Mail, "")
+	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData[0], MailData[1], MailData[2], ".", "250 OK"}, tr.History, "")
+	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: MailData}, tr.Mail, "")
 
 	res, err = tr.Process(&DataCommand)
 	assert.Error(t, err, "")
 	assert.Nil(t, res, "")
 	assert.Equal(t, smtpd.TSCompleted, tr.State, "")
-	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData, ".", "250 OK"}, tr.History, "")
-	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: &MailData}, tr.Mail, "")
+	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData[0], MailData[1], MailData[2], ".", "250 OK"}, tr.History, "")
+	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: MailData}, tr.Mail, "")
 
 	res, err = tr.Data(MailData)
 	assert.Error(t, err, "")
 	assert.Nil(t, res, "")
 	assert.Equal(t, smtpd.TSCompleted, tr.State, "")
-	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData, ".", "250 OK"}, tr.History, "")
-	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: &MailData}, tr.Mail, "")
+	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData[0], MailData[1], MailData[2], ".", "250 OK"}, tr.History, "")
+	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: MailData}, tr.Mail, "")
 
 	err = tr.Abort()
 	assert.Error(t, err, "")
 	assert.Equal(t, smtpd.TSCompleted, tr.State, "")
-	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData, ".", "250 OK"}, tr.History, "")
-	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: &MailData}, tr.Mail, "")
+	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData[0], MailData[1], MailData[2], ".", "250 OK"}, tr.History, "")
+	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}, Content: MailData}, tr.Mail, "")
 
 	fmt.Println(tr)
 }

@@ -89,6 +89,13 @@ func TestCommandWrongArgument(t *testing.T) {
 	testKo(t, "RCPT <recipient@example.com>", 501, "Syntax error in parameters or arguments")
 }
 
+func TestCommandEmptyArgument(t *testing.T) {
+	testKo(t, "HELO ", 501, "Syntax error in parameters or arguments")
+	testKo(t, "EHLO ", 501, "Syntax error in parameters or arguments")
+	testKo(t, "MAIL FROM:", 501, "Syntax error in parameters or arguments")
+	testKo(t, "RCPT TO:", 501, "Syntax error in parameters or arguments")
+}
+
 func TestCommandWrongName(t *testing.T) {
 	testKo(t, "FAKE", 500, "Syntax error, command unrecognized")
 	testKo(t, "FAKE test", 500, "Syntax error, command unrecognized")

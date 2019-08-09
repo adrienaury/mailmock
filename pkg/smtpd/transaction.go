@@ -45,10 +45,10 @@ func (tr *Transaction) Process(cmd *Command) (*Response, error) {
 }
 
 // Data sets full data, this method can only be user during TSData phase
-func (tr *Transaction) Data(data string) (*Response, error) {
+func (tr *Transaction) Data(data []string) (*Response, error) {
 	if tr != nil && tr.State == TSData {
-		tr.History = append(tr.History, data)
-		tr.Mail.Content = &data
+		tr.History = append(tr.History, data...)
+		tr.Mail.Content = data
 		tr.State = TSCompleted
 		r := &Response{250, "OK"}
 		tr.History = append(tr.History, ".")

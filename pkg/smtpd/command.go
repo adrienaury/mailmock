@@ -32,8 +32,8 @@ var listOfValidCommands = map[string]cmdDescription{
 
 // ParseCommand parses a SMTP command, returns appropriate response if the command is malformed
 // If the command is well formed, returned response is nil
-func ParseCommand(cmd string) (*Command, *Response) {
-	elmts := strings.Split(cmd, " ")
+func ParseCommand(input string) (*Command, *Response) {
+	elmts := strings.Split(input, " ")
 	name := strings.ToUpper(strings.TrimSpace(elmts[0]))
 	desc, ok := listOfValidCommands[name]
 	if !ok {
@@ -50,7 +50,7 @@ func ParseCommand(cmd string) (*Command, *Response) {
 		return nil, &Response{501, "Syntax error in parameters or arguments"}
 	}
 
-	command := &Command{FullCmd: cmd, Name: name, PositionalArgs: []string{}, NamedArgs: map[string]string{}}
+	command := &Command{FullCmd: input, Name: name, PositionalArgs: []string{}, NamedArgs: map[string]string{}}
 
 	for i, arg := range elmts {
 		argPos := i - len(command.PositionalArgs)
@@ -66,9 +66,15 @@ func ParseCommand(cmd string) (*Command, *Response) {
 			if strings.ToUpper(argSplit[0]) != argName {
 				return nil, &Response{501, "Syntax error in parameters or arguments"}
 			}
-			command.NamedArgs[argName] = argSplit[1]
+			command.NamedArgs[argName] = strings.TrimSpace(argSplit[1])
+			if command.NamedArgs[argName] == "" {
+				return nil, &Response{501, "Syntax error in parameters or arguments"}
+			}
 		} else {
-			command.PositionalArgs = append(command.PositionalArgs, arg)
+			if arg == "" {
+				return nil, &Response{501, "Syntax error in parameters or arguments"}
+			}
+			command.PositionalArgs = append(command.PositionalArgs, strings.TrimSpace(arg))
 		}
 	}
 
