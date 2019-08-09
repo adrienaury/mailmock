@@ -31,7 +31,7 @@ type Session struct {
 // NewSession return a new Session
 func NewSession(c *textproto.Conn, th *TransactionHandler) *Session {
 	s := &Session{state: SSInitiated, conn: c, th: th}
-	log.Printf("[%p] New session %v ", s, s)
+	log.Printf("[%p] New session initiated", s)
 	return s
 }
 
