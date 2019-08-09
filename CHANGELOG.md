@@ -6,11 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Planned for 0.1.0
-* SMTP server based on the standard Go package net/textproto
-* REST API for reading mails sent, based on the package github.com/go-chi
+- SMTP server based on the standard Go package net/textproto
+- REST API for reading mails sent, based on the package github.com/go-chi
 - Configuration with defaults settings from environment variables
-- LICENCE file (MIT License)
 - Sources on Github
+- LICENCE file (MIT License)
 ### Planned for 1.0.0
 - SMTP server handles correctly edges cases like unexpected connection loss
 - OpenAPI and gRPC API description
