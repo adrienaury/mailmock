@@ -58,6 +58,15 @@ func (tr *Transaction) Data(data string) (*Response, error) {
 	return nil, fmt.Errorf("TODO")
 }
 
+// Abort sets transaction's state to TSAborted
+func (tr *Transaction) Abort() error {
+	if tr != nil && (tr.State == TSInitiated || tr.State == TSInProgress || tr.State == TSData) {
+		tr.State = TSAborted
+		return nil
+	}
+	return fmt.Errorf("TODO")
+}
+
 func (tr *Transaction) handleCommand(cmd *Command) (*Response, error) {
 	switch tr.State {
 	case TSInitiated:
@@ -90,8 +99,10 @@ func (tr *Transaction) handleCommandInProgress(cmd *Command) (*Response, error) 
 		tr.Mail.Envelope.Recipients = append(tr.Mail.Envelope.Recipients, cmd.NamedArgs["TO"])
 		return &Response{250, "OK"}, nil
 	case "DATA":
-		tr.State = TSData
-		return &Response{354, "Start mail input; end with <CRLF>.<CRLF>"}, nil
+		if len(tr.Mail.Envelope.Recipients) > 0 {
+			tr.State = TSData
+			return &Response{354, "Start mail input; end with <CRLF>.<CRLF>"}, nil
+		}
 	}
 	return &Response{503, "Bad sequence of commands"}, nil
 }
