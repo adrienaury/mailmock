@@ -16,7 +16,7 @@ var (
 	OtherCommand smtpd.Command = smtpd.Command{Name: "FAKE", FullCmd: "FAKE"}
 )
 
-func TestNominal(t *testing.T) {
+func TestTransactionNominal(t *testing.T) {
 	tr := smtpd.NewTransaction()
 	assert.Equal(t, smtpd.TSInitiated, tr.State, "A newly created transaction MUST have an initiated State")
 	assert.Empty(t, tr.History, "A newly created transaction MUST have an empty History")
@@ -98,7 +98,7 @@ func TestNominal(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestAbort1(t *testing.T) {
+func TestTransactionAbort1(t *testing.T) {
 	tr := smtpd.NewTransaction()
 	assert.Equal(t, smtpd.TSInitiated, tr.State, "")
 	assert.Empty(t, tr.History, "")
@@ -154,7 +154,7 @@ func TestAbort1(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestAbort2(t *testing.T) {
+func TestTransactionAbort2(t *testing.T) {
 	tr := smtpd.NewTransaction()
 	assert.Equal(t, smtpd.TSInitiated, tr.State, "")
 	assert.Empty(t, tr.History, "")
@@ -218,7 +218,7 @@ func TestAbort2(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestAbort3(t *testing.T) {
+func TestTransactionAbort3(t *testing.T) {
 	tr := smtpd.NewTransaction()
 	assert.Equal(t, smtpd.TSInitiated, tr.State, "")
 	assert.Empty(t, tr.History, "")
@@ -290,7 +290,7 @@ func TestAbort3(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestAbort4(t *testing.T) {
+func TestTransactionAbort4(t *testing.T) {
 	tr := smtpd.NewTransaction()
 	assert.Equal(t, smtpd.TSInitiated, tr.State, "")
 	assert.Empty(t, tr.History, "")
@@ -370,7 +370,7 @@ func TestAbort4(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestWrongSequence1(t *testing.T) {
+func TestTransactionWrongSequence1(t *testing.T) {
 	tr := smtpd.NewTransaction()
 
 	res, err := tr.Process(&RcptCommand)
@@ -392,7 +392,7 @@ func TestWrongSequence1(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestWrongSequence2(t *testing.T) {
+func TestTransactionWrongSequence2(t *testing.T) {
 	tr := smtpd.NewTransaction()
 
 	res, err := tr.Process(&MailCommand)
@@ -414,7 +414,7 @@ func TestWrongSequence2(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestMissingRecipient(t *testing.T) {
+func TestTransactionMissingRecipient(t *testing.T) {
 	tr := smtpd.NewTransaction()
 
 	res, err := tr.Process(&MailCommand)
@@ -436,7 +436,7 @@ func TestMissingRecipient(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestUnexpectedData(t *testing.T) {
+func TestTransactionUnexpectedData(t *testing.T) {
 	tr := smtpd.NewTransaction()
 
 	res, err := tr.Data(MailData)
@@ -449,7 +449,7 @@ func TestUnexpectedData(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestUnexpectedCommand(t *testing.T) {
+func TestTransactionUnexpectedCommand(t *testing.T) {
 	tr := smtpd.NewTransaction()
 
 	res, err := tr.Process(&MailCommand)
@@ -507,7 +507,7 @@ func TestUnexpectedCommand(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestNil(t *testing.T) {
+func TestTransactionNil(t *testing.T) {
 	var tr *smtpd.Transaction
 
 	res, err := tr.Data(MailData)
@@ -527,7 +527,7 @@ func TestNil(t *testing.T) {
 	fmt.Println(tr)
 }
 
-func TestInvalidState(t *testing.T) {
+func TestTransactionInvalidState(t *testing.T) {
 	tr := smtpd.Transaction{State: ""}
 
 	res, err := tr.Data(MailData)

@@ -53,7 +53,11 @@ func ParseCommand(cmd string) (*Command, *Response) {
 	command := &Command{FullCmd: cmd, Name: name, PositionalArgs: []string{}, NamedArgs: map[string]string{}}
 
 	for i, arg := range elmts {
-		argName := desc.argumentNames[i]
+		argPos := i - len(command.PositionalArgs)
+		if argPos >= len(desc.argumentNames) {
+			break
+		}
+		argName := desc.argumentNames[argPos]
 		if argName != "" {
 			if strings.Count(arg, ":") != 1 {
 				return nil, &Response{501, "Syntax error in parameters or arguments"}
@@ -64,7 +68,7 @@ func ParseCommand(cmd string) (*Command, *Response) {
 			}
 			command.NamedArgs[argName] = argSplit[1]
 		} else {
-			command.PositionalArgs[i] = arg
+			command.PositionalArgs = append(command.PositionalArgs, arg)
 		}
 	}
 
