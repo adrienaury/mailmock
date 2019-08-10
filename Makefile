@@ -17,12 +17,20 @@ help:
 clean: ## Clean builds
 	rm -rf ${BUILD_DIR}/
 
+.PHONY: mkdir
+mkdir:
+	mkdir -p ${BUILD_DIR}
+
 .PHONY: build-%
-build-%:
+build-%: mkdir
 	go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: build
 build: $(patsubst cmd/%,build-%,$(wildcard cmd/*)) ## Build all binaries
+
+.PHONY: test
+test: mkdir ## Run all tests with coverage
+	go test -coverprofile=${BUILD_DIR}/coverage.txt -covermode=atomic ./...
 
 .PHONY: run-%
 run-%: build-%
