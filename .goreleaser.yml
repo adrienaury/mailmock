@@ -1,0 +1,8 @@
+env:
+  - GO111MODULE=on
+before:
+  hooks:
+    - go mod download
+builds:
+  - main: ./cmd/mailmockd/main.go
+    binary: mailmockd
