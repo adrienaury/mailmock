@@ -9,8 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SMTP server based on the standard Go package net/textproto
 - REST API for reading mails sent, based on the package github.com/go-chi
 - Configuration with defaults settings from environment variables
-- Travis CI build configuration
-- Makefile
 ### Planned for 1.0.0
 - SMTP server handles correctly edges cases like unexpected connection loss
 - OpenAPI and gRPC API description

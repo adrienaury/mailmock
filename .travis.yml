@@ -14,6 +14,7 @@ services:
   - docker
 install:
   - 'sudo snap install snapcraft --classic'
+script: go test -v ./...
 deploy:
   - provider: script
     skip_cleanup: true
