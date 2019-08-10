@@ -14,7 +14,7 @@ services:
   - docker
 install:
   - 'sudo snap install snapcraft --classic'
-script: go test -v ./...
+script: go test -coverprofile=coverage.txt -covermode=atomic -v ./...
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 deploy:
