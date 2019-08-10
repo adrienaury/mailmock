@@ -2,8 +2,10 @@ language: go
 
 go:
     - 1.12.x
-    - tip
 
 env:
     global:
         - GO111MODULE=on
+
+before_script:
+    - export VERSION=${TRAVIS_TAG:-$TRAVIS_BRANCH}
