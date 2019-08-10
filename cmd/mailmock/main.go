@@ -41,10 +41,17 @@ var th smtpd.TransactionHandler = func(tr *smtpd.Transaction) {
 
 func main() {
 
-	fmt.Printf("Mailmock v%v  Copyright (C) 2019  Adrien Aury", version)
-	fmt.Printf("This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.")
-	fmt.Printf("This is free software, and you are welcome to redistribute it")
-	fmt.Printf("under certain conditions; type `show c' for details.")
+	fmt.Printf(`
+     __  __       _ _                      _
+    |  \/  |     (_) |                    | |
+    | \  / | __ _ _| |_ __ ___   ___   ___| | __
+    | |\/| |/ _' | | | '_ ' _ \ / _ \ / __| |/ /
+    | |  | | (_| | | | | | | | | (_) | (__|   <
+    |_|  |_|\__,_|_|_|_| |_| |_|\___/ \___|_|\_\
+        `)
+
+	fmt.Printf("%v - Copyright (C) 2019  Adrien Aury\n\n", version)
+	fmt.Println("This program is licensed under the terms of the GNU General Public License v3 (https://www.gnu.org/licenses/gpl-3.0.html)")
 
 	defaultSMTPPort := "smtp"
 	defaultHTTPPort := "http"
