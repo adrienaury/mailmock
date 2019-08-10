@@ -5,4 +5,8 @@ before:
     - go mod download
 builds:
   - main: ./cmd/mailmockd/main.go
-    binary: mailmockd
+    goos:
+      - darwin
+      - linux
+      - windows
+    binary: mailmock
