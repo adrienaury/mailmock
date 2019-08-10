@@ -8,6 +8,15 @@ import (
 	"github.com/adrienaury/mailmock/pkg/smtpd"
 )
 
+// Provisioned by ldflags
+// nolint: gochecknoglobals
+var (
+	version string
+	commit  string
+	build   string
+	builtBy string
+)
+
 var th smtpd.TransactionHandler = func(tr *smtpd.Transaction) {
 	repository.Store(tr)
 }
