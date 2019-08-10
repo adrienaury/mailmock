@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SMTP server based on the standard Go package net/textproto
 - REST API for reading mails sent, based on the package github.com/go-chi
 - Configuration with defaults settings from environment variables
-- Sources on Github
-- LICENCE file (MIT License)
+- Travis CI build configuration
+- Makefile
 ### Planned for 1.0.0
 - SMTP server handles correctly edges cases like unexpected connection loss
 - OpenAPI and gRPC API description
@@ -19,8 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logging with github.com/goph/logur and github.com/sirupsen/logrus
 - Go tests for every file
 - Dockerfile and docker-compose.yaml files
-- Makefile
-- Travis CI build configuration
 - Go releases with https://github.com/goreleaser/goreleaser
 - Complete documentation including README.md (https://www.writethedocs.org/)
 - Code of conduct (https://www.contributor-covenant.org/)
