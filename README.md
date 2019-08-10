@@ -1,7 +1,7 @@
 Mailmock
 ========
 
-Mailmock is a lightweight SMTP server designed for testing. It exposes a REST API which will enable your CI/CD to check what transaction were made with the SMTP server and what was sent to who.
+Mailmock is a lightweight SMTP server designed for testing. It exposes a REST API which will enable your CI/CD to check what transaction were made and what was sent to who.
 
 Mailmock is inspired by Mailhog, but doesn't expose a graphical user interface.
 
@@ -54,7 +54,7 @@ This project uses the following Go librairies :
 - github.com/go-chi/render v1.0.1
 - github.com/stretchr/testify v1.3.0
 
-Here are the required copyright notices and this permission notices :
+Here are the required copyright and permission notices :
 
     Copyright (c) 2015-present Peter Kieltyka (https://github.com/pkieltyka), Google Inc.
     Copyright (c) 2016-Present https://github.com/go-chi authors
