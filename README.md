@@ -1,4 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/adrienaury/mailmock)](https://goreportcard.com/report/github.com/adrienaury/mailmock)
+![Github Release Card](https://img.shields.io/github/release/adrienaury/mailmock)
 
 Mailmock
 ========
