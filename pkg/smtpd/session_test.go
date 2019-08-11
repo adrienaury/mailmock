@@ -55,6 +55,38 @@ func TestSessionNominal(t *testing.T) {
 	test(t, snd, rcv)
 }
 
+func TestSessionNoop(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"NOOP",
+			"QUIT",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"250 OK",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
+func TestSessionVerify(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"VRFY test",
+			"QUIT",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"502 Command not implemented",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
 func test(t *testing.T, snd string, rcv string) {
 	sndbuf := bytes.NewBuffer([]byte(snd))
 	rcvbuf := bytes.NewBuffer(nil)
