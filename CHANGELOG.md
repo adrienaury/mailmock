@@ -5,17 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Planned for 0.1.1
+- SMTP server handles correctly edges cases like unexpected connection loss
+- Go tests for every file
 ### Planned for 0.2.0
 - Cleaner logs, color disabled by default but possibility to reactivate
 - Adding pagination to the REST API
+- Dockerfile and docker-compose.yaml files
 ### Planned for 1.0.0
-- SMTP server handles correctly edges cases like unexpected connection loss
 - OpenAPI and gRPC API description
 - Configuration with defaults settings from TOML envfile, environment variables
   or command line flags using package github.com/spf13/viper
 - Logging with github.com/goph/logur and github.com/sirupsen/logrus
-- Go tests for every file
-- Dockerfile and docker-compose.yaml files
 - Complete documentation
 - Code of conduct (https://www.contributor-covenant.org/)
 - Logo
@@ -28,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Live reloading of configuration
 - Extend API with search service
 
-## [0.1.1] - TODO
+## [0.1.1] - Unreleased yet
 ### Fixed
 - VRFY command takes exactly 1 parameter
 
