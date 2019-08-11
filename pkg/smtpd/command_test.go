@@ -69,7 +69,7 @@ func TestCommandNominal(t *testing.T) {
 	testOk(t, "NOOP", "NOOP", []string{}, map[string]string{})
 	testOk(t, "RSET", "RSET", []string{}, map[string]string{})
 	testOk(t, "QUIT", "QUIT", []string{}, map[string]string{})
-	testOk(t, "VRFY test", "VRFY", []string{}, map[string]string{})
+	testOk(t, "VRFY test", "VRFY", []string{"test"}, map[string]string{})
 }
 
 func TestCommandLowercase(t *testing.T) {
@@ -81,7 +81,7 @@ func TestCommandLowercase(t *testing.T) {
 	testOk(t, "noop", "NOOP", []string{}, map[string]string{})
 	testOk(t, "rset", "RSET", []string{}, map[string]string{})
 	testOk(t, "quit", "QUIT", []string{}, map[string]string{})
-	testOk(t, "vrfy test", "VRFY", []string{}, map[string]string{})
+	testOk(t, "vrfy test", "VRFY", []string{"test"}, map[string]string{})
 }
 
 func TestCommandNumberArguments1(t *testing.T) {
