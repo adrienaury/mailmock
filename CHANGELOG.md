@@ -6,7 +6,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Planned for 0.1.1
-- SMTP server handles correctly edges cases like unexpected connection loss
 - Go tests for every file
 ### Planned for 0.2.0
 - Cleaner logs, color disabled by default but possibility to reactivate
@@ -34,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - VRFY command takes exactly 1 parameter
 - API returns 404 error if nothing found
+- Better handling of connection closed or lost
 
 ## [0.1.0] - 2019-08-10
 ### Added
