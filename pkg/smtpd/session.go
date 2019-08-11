@@ -210,7 +210,7 @@ func (s *Session) quit(cmd *Command) *Response {
 }
 
 func (s *Session) handleTransaction() {
-	if (*s.th) != nil && s.tr != nil {
+	if s.th != nil && (*s.th) != nil && s.tr != nil {
 		go (*s.th)(s.tr)
 	}
 	s.tr = nil

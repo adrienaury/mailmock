@@ -35,11 +35,6 @@
 // exception statement from your version.
 package smtpd
 
-import (
-	"fmt"
-	"strings"
-)
-
 // Envelope contains the sender address (originator or return-path).
 type Envelope struct {
 	Sender     string   `json:"sender"`
@@ -50,8 +45,4 @@ type Envelope struct {
 type Mail struct {
 	Envelope Envelope `json:"envelope"`
 	Content  []string `json:"content"`
-}
-
-func (m Mail) String() string {
-	return fmt.Sprintf("MAIL FROM:%v\nRCPT TO:%v\n%v", m.Envelope.Sender, strings.Join(m.Envelope.Recipients, ", "), strings.Join(m.Content, "\n"))
 }

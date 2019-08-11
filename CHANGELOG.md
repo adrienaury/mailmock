@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Planned for 0.2.0
+- Cleaner logs, color disabled by default but possibility to reactivate
+- Adding pagination to the REST API
 ### Planned for 1.0.0
 - SMTP server handles correctly edges cases like unexpected connection loss
 - OpenAPI and gRPC API description
