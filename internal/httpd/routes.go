@@ -57,9 +57,15 @@ func getOne(w http.ResponseWriter, r *http.Request) {
 	trID := chi.URLParam(r, "ID")
 	i, err := strconv.ParseInt(trID, 10, 0)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	render.JSON(w, r, repository.Use(int(i))) // A chi router helper for serializing and returning json
+	obj := repository.Use(int(i))
+	if obj == nil {
+		http.NotFound(w, r)
+		return
+	}
+	render.JSON(w, r, obj) // A chi router helper for serializing and returning json
 }
 
 func getAll(w http.ResponseWriter, r *http.Request) {
