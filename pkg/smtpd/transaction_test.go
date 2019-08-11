@@ -556,7 +556,7 @@ func TestTransactionNil(t *testing.T) {
 	assert.Nil(t, tr, "")
 
 	err = tr.Abort()
-	assert.Error(t, err, "")
+	assert.NoError(t, err, "")
 	assert.Nil(t, tr, "")
 
 	fmt.Println(tr)

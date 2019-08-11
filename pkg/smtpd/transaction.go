@@ -99,7 +99,10 @@ func (tr *Transaction) Abort() error {
 		tr.State = TSAborted
 		return nil
 	}
-	return fmt.Errorf("TODO")
+	if tr != nil {
+		return fmt.Errorf("TODO")
+	}
+	return nil
 }
 
 func (tr *Transaction) handleCommand(cmd *Command) (*Response, error) {

@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gracefull restarts with github.com/cloudflare/tableflip
 - Live reloading of configuration
 - Extend API with search service
+- Possibility to enable relay mode
 
 ## [0.1.1] - Unreleased yet
 ### Fixed
