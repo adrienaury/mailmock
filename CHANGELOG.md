@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Live reloading of configuration
 - Extend API with search service
 
+## [0.1.1] - TODO
+### Fixed
+- VRFY command takes exactly 1 parameter
+
 ## [0.1.0] - 2019-08-10
 ### Added
 - Dummy SMTP server (RFC 5321 compliant)
