@@ -62,7 +62,7 @@ var listOfValidCommands = map[string]cmdDescription{
 	"NOOP": {0, false, []string{}},
 	"RSET": {0, true, []string{}},
 	"QUIT": {0, true, []string{}},
-	"VRFY": {0, true, []string{}},
+	"VRFY": {1, true, []string{}},
 }
 
 // ParseCommand parses a SMTP command, returns appropriate response if the command is malformed

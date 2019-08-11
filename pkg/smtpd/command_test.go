@@ -69,7 +69,7 @@ func TestCommandNominal(t *testing.T) {
 	testOk(t, "NOOP", "NOOP", []string{}, map[string]string{})
 	testOk(t, "RSET", "RSET", []string{}, map[string]string{})
 	testOk(t, "QUIT", "QUIT", []string{}, map[string]string{})
-	testOk(t, "VRFY", "VRFY", []string{}, map[string]string{})
+	testOk(t, "VRFY test", "VRFY", []string{}, map[string]string{})
 }
 
 func TestCommandLowercase(t *testing.T) {
@@ -81,7 +81,7 @@ func TestCommandLowercase(t *testing.T) {
 	testOk(t, "noop", "NOOP", []string{}, map[string]string{})
 	testOk(t, "rset", "RSET", []string{}, map[string]string{})
 	testOk(t, "quit", "QUIT", []string{}, map[string]string{})
-	testOk(t, "vrfy", "VRFY", []string{}, map[string]string{})
+	testOk(t, "vrfy test", "VRFY", []string{}, map[string]string{})
 }
 
 func TestCommandNumberArguments1(t *testing.T) {
@@ -93,7 +93,7 @@ func TestCommandNumberArguments1(t *testing.T) {
 	testOk(t, "NOOP test", "NOOP", []string{}, map[string]string{})
 	testKo(t, "RSET test", 501, "Syntax error in parameters or arguments")
 	testKo(t, "QUIT test", 501, "Syntax error in parameters or arguments")
-	testKo(t, "VRFY test", 501, "Syntax error in parameters or arguments")
+	testKo(t, "VRFY test test", 501, "Syntax error in parameters or arguments")
 }
 
 func TestCommandNumberArguments2(t *testing.T) {
@@ -105,7 +105,7 @@ func TestCommandNumberArguments2(t *testing.T) {
 	testOk(t, "NOOP TEST:test", "NOOP", []string{}, map[string]string{})
 	testKo(t, "RSET TEST:test", 501, "Syntax error in parameters or arguments")
 	testKo(t, "QUIT TEST:test", 501, "Syntax error in parameters or arguments")
-	testKo(t, "VRFY TEST:test", 501, "Syntax error in parameters or arguments")
+	testKo(t, "VRFY test TEST:test", 501, "Syntax error in parameters or arguments")
 }
 
 func TestCommandNumberArguments3(t *testing.T) {
@@ -115,6 +115,7 @@ func TestCommandNumberArguments3(t *testing.T) {
 	testKo(t, "MAIL", 501, "Syntax error in parameters or arguments")
 	testKo(t, "RCPT", 501, "Syntax error in parameters or arguments")
 	testKo(t, "RCPT test", 501, "Syntax error in parameters or arguments")
+	testKo(t, "VRFY", 501, "Syntax error in parameters or arguments")
 }
 
 func TestCommandWrongArgument(t *testing.T) {
