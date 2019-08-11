@@ -55,6 +55,46 @@ func TestSessionNominal(t *testing.T) {
 	test(t, snd, rcv)
 }
 
+func TestSessionReset1(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"HELO localhost",
+			"MAIL FROM:<sender@example.com>",
+			"RCPT TO:<recipient@example.com>",
+			"RSET",
+			"MAIL FROM:<sender@example.com>",
+			"QUIT",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"250 OK",
+			"250 OK",
+			"250 OK",
+			"250 OK",
+			"250 OK",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
+func TestSessionReset2(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"RSET",
+			"QUIT",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"250 OK",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
 func TestSessionNoop(t *testing.T) {
 	var (
 		snd string = strings.Join([]string{
@@ -80,6 +120,78 @@ func TestSessionVerify(t *testing.T) {
 		rcv string = strings.Join([]string{
 			"220 Service ready",
 			"502 Command not implemented",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
+func TestSessionInvalidCommand(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"FAKE test",
+			"QUIT",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"500 Syntax error, command unrecognized",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
+func TestSessionBadSequence1(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"HELO localhost",
+			"RCPT TO:<recipient@example.com>",
+			"QUIT",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"250 OK",
+			"503 Bad sequence of commands",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
+func TestSessionBadSequence2(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"HELO localhost",
+			"MAIL FROM:<sender@example.com>",
+			"MAIL FROM:<sender@example.com>",
+			"QUIT",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"250 OK",
+			"250 OK",
+			"503 Bad sequence of commands",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
+func TestSessionBadSequence3(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"HELO localhost",
+			"DATA",
+			"QUIT",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"250 OK",
+			"503 Bad sequence of commands",
 			"221 Service closing transmission channel",
 			"",
 		}, "\r\n")

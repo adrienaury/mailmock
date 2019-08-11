@@ -15,7 +15,7 @@ var th smtpd.TransactionHandler = func(tr *smtpd.Transaction) {
 }
 
 func TestMain(m *testing.M) {
-	srv := smtpd.NewServer("mockmail", "localhost", "1024", nil)
+	srv := smtpd.NewServer("mockmail", "localhost", "1024", &th)
 	go srv.ListenAndServe()
 	os.Exit(m.Run())
 }
