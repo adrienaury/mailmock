@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - Unreleased yet
 ### Fixed
 - VRFY command takes exactly 1 parameter
+- API returns 404 error if nothing found
 
 ## [0.1.0] - 2019-08-10
 ### Added
