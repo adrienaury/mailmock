@@ -72,6 +72,10 @@ func NewSession(c *textproto.Conn, th *TransactionHandler) *Session {
 
 // Serve will reponds to any request until a QUIT command is received
 func (s *Session) Serve() {
+	if s.state == SSClosed {
+		s.conn.PrintfLine("%v", Response{421, "Service not available, closing transmission channel"})
+		return
+	}
 	s.conn.PrintfLine("%v", Response{220, "Service ready"})
 
 	for {
