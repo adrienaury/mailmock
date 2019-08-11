@@ -181,7 +181,7 @@ func TestTransactionAbort1(t *testing.T) {
 	assert.Empty(t, tr.Mail, "")
 
 	err = tr.Abort()
-	assert.Error(t, err, "")
+	assert.NoError(t, err, "")
 	assert.Equal(t, smtpd.TSAborted, tr.State, "")
 	assert.Empty(t, tr.History, "")
 	assert.Empty(t, tr.Mail, "")
@@ -245,7 +245,7 @@ func TestTransactionAbort2(t *testing.T) {
 	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com"}}, tr.Mail, "")
 
 	err = tr.Abort()
-	assert.Error(t, err, "")
+	assert.NoError(t, err, "")
 	assert.Equal(t, smtpd.TSAborted, tr.State, "")
 	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK"}, tr.History, "")
 	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com"}}, tr.Mail, "")
@@ -317,7 +317,7 @@ func TestTransactionAbort3(t *testing.T) {
 	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}}, tr.Mail, "")
 
 	err = tr.Abort()
-	assert.Error(t, err, "")
+	assert.NoError(t, err, "")
 	assert.Equal(t, smtpd.TSAborted, tr.State, "")
 	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK"}, tr.History, "")
 	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}}, tr.Mail, "")
@@ -397,7 +397,7 @@ func TestTransactionAbort4(t *testing.T) {
 	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}}, tr.Mail, "")
 
 	err = tr.Abort()
-	assert.Error(t, err, "")
+	assert.NoError(t, err, "")
 	assert.Equal(t, smtpd.TSAborted, tr.State, "")
 	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>"}, tr.History, "")
 	assert.Equal(t, smtpd.Mail{Envelope: smtpd.Envelope{Sender: "sender@example.com", Recipients: []string{"recipient@example.com"}}}, tr.Mail, "")
@@ -569,12 +569,9 @@ func TestTransactionInvalidState(t *testing.T) {
 	assert.Error(t, err, "")
 	assert.Nil(t, res, "")
 
-	res, err = tr.Process(&MailCommand)
-	assert.Error(t, err, "")
-	assert.Nil(t, res, "")
+	assert.Panics(t, func() { tr.Process(&MailCommand) }, "")
 
-	err = tr.Abort()
-	assert.Error(t, err, "")
+	assert.Panics(t, func() { tr.Abort() }, "")
 
 	fmt.Println(tr)
 }
