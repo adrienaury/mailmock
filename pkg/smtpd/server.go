@@ -68,7 +68,8 @@ func (srv *Server) serve(ln net.Listener) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error accepting connection: %s\n", err)
+			continue
 		}
 		go srv.handleConnection(conn)
 	}

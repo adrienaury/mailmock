@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VRFY command takes exactly 1 parameter
 - API returns 404 error if nothing found
 - Better handling of connection closed or lost
+- Better error messages
 
 ## [0.1.0] - 2019-08-10
 ### Added
