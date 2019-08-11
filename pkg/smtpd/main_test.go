@@ -15,13 +15,13 @@ var th smtpd.TransactionHandler = func(tr *smtpd.Transaction) {
 }
 
 func TestMain(m *testing.M) {
-	srv := smtpd.NewServer("mockmail", "localhost", "smtp", nil)
+	srv := smtpd.NewServer("mockmail", "localhost", "1024", nil)
 	go srv.ListenAndServe()
 	os.Exit(m.Run())
 }
 
 func TestNominal(t *testing.T) {
-	c, err := smtp.Dial("127.0.0.1:25")
+	c, err := smtp.Dial("127.0.0.1:1024")
 	assert.NoError(t, err, "")
 	assert.NotNil(t, c, "")
 
