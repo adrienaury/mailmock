@@ -36,6 +36,7 @@
 package smtpd
 
 import (
+	"io"
 	"log"
 	"net/textproto"
 )
@@ -70,21 +71,38 @@ func NewSession(c *textproto.Conn, th *TransactionHandler) *Session {
 	return s
 }
 
-// Serve will reponds to any request until a QUIT command is received
+// Serve will reponds to any request until a QUIT command is received or connection is broken
 func (s *Session) Serve() {
-	s.conn.PrintfLine("%v", Response{220, "Service ready"})
+	if s.state == SSClosed {
+		s.conn.PrintfLine("%v", Response{421, "Service not available, closing transmission channel"})
+		return
+	}
+
+	if err := s.conn.PrintfLine("%v", Response{220, "Service ready"}); err != nil {
+		s.quit()
+		log.Printf("[%p] %9s %15s == connection error : %v", s, s.state, s.client, err)
+		return
+	}
 
 	for {
-		input, err := s.conn.ReadLine()
-		if err != nil {
-			log.Fatal(err)
+		var r *Response
+
+		if input, err := s.conn.ReadLine(); err == io.EOF || err == io.ErrClosedPipe {
+			r = s.quit()
+			log.Printf("[%p] %9s %15s == client closed connection", s, s.state, s.client)
+		} else if err != nil {
+			log.Printf("[%p] %9s %15s == connection error : %v", s, s.state, s.client, err)
+			r = &Response{451, "Requested action aborted: error in processing"}
+		} else {
+			log.Printf("[%p] %9s %15s => %v", s, s.state, s.client, input)
+			r = s.receive(input)
 		}
-		log.Printf("[%p] %9s %15s => %v", s, s.state, s.client, input)
-		r := s.receive(input)
+
 		log.Printf("[%p] %9s %15s <= %v", s, s.state, s.client, r)
-		err = s.conn.PrintfLine("%v", r)
-		if err != nil {
-			log.Fatal(err)
+		if err := s.conn.PrintfLine("%v", r); err != nil {
+			s.quit()
+			log.Printf("[%p] %9s %15s == connection error : %v", s, s.state, s.client, err)
+			return
 		}
 		if s.tr != nil && (s.tr.State == TSCompleted || s.tr.State == TSAborted) {
 			s.handleTransaction()
@@ -102,9 +120,9 @@ func (s *Session) receive(input string) (res *Response) {
 	}
 	switch cmd.Name {
 	case "HELO":
-		res = s.hello(cmd)
+		res = s.hello(cmd.PositionalArgs[0])
 	case "EHLO":
-		res = s.hello(cmd)
+		res = s.hello(cmd.PositionalArgs[0])
 	case "MAIL":
 		res = s.mail(cmd)
 	case "RCPT":
@@ -112,21 +130,21 @@ func (s *Session) receive(input string) (res *Response) {
 	case "DATA":
 		res = s.data(cmd)
 	case "NOOP":
-		res = s.noop(cmd)
+		res = s.noop()
 	case "RSET":
-		res = s.reset(cmd)
+		res = s.reset()
 	case "QUIT":
-		res = s.quit(cmd)
+		res = s.quit()
 	case "VRFY":
-		res = s.verify(cmd)
+		res = s.verify(cmd.PositionalArgs[0])
 	default:
 		log.Fatal("Coding Error")
 	}
 	return res
 }
 
-func (s *Session) hello(cmd *Command) *Response {
-	s.client = cmd.PositionalArgs[0]
+func (s *Session) hello(client string) *Response {
+	s.client = client
 	s.state = SSReady
 	return &Response{250, "OK"}
 }
@@ -138,7 +156,7 @@ func (s *Session) mail(cmd *Command) *Response {
 	s.tr = NewTransaction()
 	res, err := s.tr.Process(cmd)
 	if err != nil {
-		// TODO
+		return &Response{451, "Requested action aborted: error in processing"}
 	}
 	s.state = SSBusy
 	return res
@@ -150,7 +168,7 @@ func (s *Session) rcpt(cmd *Command) *Response {
 	}
 	res, err := s.tr.Process(cmd)
 	if err != nil {
-		// TODO
+		return &Response{451, "Requested action aborted: error in processing"}
 	}
 	return res
 }
@@ -162,36 +180,36 @@ func (s *Session) data(cmd *Command) *Response {
 
 	res, err := s.tr.Process(cmd)
 	if err != nil {
-		// TODO
+		return &Response{451, "Requested action aborted: error in processing"}
 	}
 
 	s.conn.PrintfLine("%v", res)
 	data, err := s.conn.ReadDotLines()
 	if err != nil {
-		// TODO
+		return &Response{451, "Requested action aborted: error in processing"}
 	}
 
 	res, err = s.tr.Data(data)
 	if err != nil {
-		// TODO
+		return &Response{451, "Requested action aborted: error in processing"}
 	}
 
 	s.state = SSReady
 	return res
 }
 
-func (s *Session) verify(cmd *Command) *Response {
+func (s *Session) verify(address string) *Response {
 	return &Response{502, "Command not implemented"}
 }
 
-func (s *Session) noop(cmd *Command) *Response {
+func (s *Session) noop() *Response {
 	return &Response{250, "OK"}
 }
 
-func (s *Session) reset(cmd *Command) *Response {
+func (s *Session) reset() *Response {
 	err := s.tr.Abort()
 	if err != nil {
-		// TODO
+		return &Response{451, "Requested action aborted: error in processing"}
 	}
 
 	if s.client != "" {
@@ -203,14 +221,14 @@ func (s *Session) reset(cmd *Command) *Response {
 	return &Response{250, "OK"}
 }
 
-func (s *Session) quit(cmd *Command) *Response {
+func (s *Session) quit() *Response {
 	s.state = SSClosed
 	s.tr.Abort()
 	return &Response{Code: 221, Msg: "Service closing transmission channel"}
 }
 
 func (s *Session) handleTransaction() {
-	if (*s.th) != nil && s.tr != nil {
+	if s.th != nil && (*s.th) != nil && s.tr != nil {
 		go (*s.th)(s.tr)
 	}
 	s.tr = nil

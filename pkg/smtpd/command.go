@@ -62,7 +62,7 @@ var listOfValidCommands = map[string]cmdDescription{
 	"NOOP": {0, false, []string{}},
 	"RSET": {0, true, []string{}},
 	"QUIT": {0, true, []string{}},
-	"VRFY": {0, true, []string{}},
+	"VRFY": {1, true, []string{""}},
 }
 
 // ParseCommand parses a SMTP command, returns appropriate response if the command is malformed
@@ -73,6 +73,10 @@ func ParseCommand(input string) (*Command, *Response) {
 	desc, ok := listOfValidCommands[name]
 	if !ok {
 		return nil, &Response{500, "Syntax error, command unrecognized"}
+	}
+
+	if desc.numberOfArgument != len(desc.argumentNames) {
+		panic("Coding Error: wrong cmdDescription for " + name)
 	}
 
 	elmts = elmts[1:]

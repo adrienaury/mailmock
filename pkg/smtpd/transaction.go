@@ -76,7 +76,7 @@ func (tr *Transaction) Process(cmd *Command) (*Response, error) {
 		}
 		return r, err
 	}
-	return nil, fmt.Errorf("TODO")
+	return nil, fmt.Errorf("No transaction available to process [%v]", cmd)
 }
 
 // Data sets full data, this method can only be user during TSData phase
@@ -90,7 +90,7 @@ func (tr *Transaction) Data(data []string) (*Response, error) {
 		tr.History = append(tr.History, r.String())
 		return r, nil
 	}
-	return nil, fmt.Errorf("TODO")
+	return nil, fmt.Errorf("No transaction available to process data")
 }
 
 // Abort sets transaction's state to TSAborted
@@ -99,7 +99,17 @@ func (tr *Transaction) Abort() error {
 		tr.State = TSAborted
 		return nil
 	}
-	return fmt.Errorf("TODO")
+	if tr != nil && tr.State == TSCompleted {
+		return fmt.Errorf("This transaction is already completed, it can't be aborted")
+	}
+
+	if tr != nil && tr.State == TSAborted {
+		return nil
+	}
+	if tr != nil {
+		panic("Coding Error : every case must be implemented")
+	}
+	return nil
 }
 
 func (tr *Transaction) handleCommand(cmd *Command) (*Response, error) {
@@ -109,13 +119,13 @@ func (tr *Transaction) handleCommand(cmd *Command) (*Response, error) {
 	case TSInProgress:
 		return tr.handleCommandInProgress(cmd)
 	case TSData:
-		return nil, fmt.Errorf("TODO")
+		return nil, fmt.Errorf("This transaction can't receive commands right now")
 	case TSCompleted:
 		return tr.handleCommandCompleted(cmd)
 	case TSAborted:
 		return tr.handleCommandAborted(cmd)
 	}
-	return nil, fmt.Errorf("TODO")
+	panic("Coding Error : every case must be implemented")
 }
 
 func (tr *Transaction) handleCommandInitiated(cmd *Command) (*Response, error) {
@@ -143,11 +153,11 @@ func (tr *Transaction) handleCommandInProgress(cmd *Command) (*Response, error) 
 }
 
 func (tr *Transaction) handleCommandCompleted(cmd *Command) (*Response, error) {
-	return nil, fmt.Errorf("TODO")
+	return nil, fmt.Errorf("Sorry, this transaction is completed ans doen't accept any command")
 }
 
 func (tr *Transaction) handleCommandAborted(cmd *Command) (*Response, error) {
-	return nil, fmt.Errorf("TODO")
+	return nil, fmt.Errorf("Sorry, this transaction is aborted ans doen't accept any command")
 }
 
 func (tr Transaction) String() string {
