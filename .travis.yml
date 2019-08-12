@@ -16,7 +16,7 @@ install:
   - 'sudo snap install snapcraft --classic'
 script: go test -coverprofile=coverage.txt -covermode=atomic -v ./...
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash) -c
 deploy:
   - provider: script
     skip_cleanup: true
