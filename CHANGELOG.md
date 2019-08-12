@@ -5,12 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Planned for 0.1.1
-- Go tests for every file
 ### Planned for 0.2.0
 - Cleaner logs, color disabled by default but possibility to reactivate
 - Adding pagination to the REST API
 - Dockerfile and docker-compose.yaml files
+- Go tests for every file
 ### Planned for 1.0.0
 - OpenAPI and gRPC API description
 - Configuration with defaults settings from TOML envfile, environment variables
@@ -29,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extend API with search service
 - Possibility to enable relay mode
 
-## [0.1.1] - Unreleased yet
+## [0.1.1] - 2019-08-12
 ### Fixed
 - VRFY command takes exactly 1 parameter
 - API returns 404 error if nothing found
