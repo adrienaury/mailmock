@@ -45,3 +45,8 @@ func All(from, limit int) []interface{} {
 	}
 	return []interface{}{}
 }
+
+// Len gives the total number of objects stored.
+func Len() int {
+	return len(storedObjects)
+}
