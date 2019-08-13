@@ -68,5 +68,34 @@ func getOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAll(w http.ResponseWriter, r *http.Request) {
-	render.JSON(w, r, repository.All()) // A chi router helper for serializing and returning json
+	var from, limit int64
+	var err error
+
+	if froms, ok := r.URL.Query()["from"]; !ok || len(froms) < 1 {
+		from = 0
+	} else {
+		from, err = strconv.ParseInt(froms[0], 10, 0)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
+	if limits, ok := r.URL.Query()["limit"]; !ok || len(limits) < 1 {
+		limit = 20
+	} else {
+		limit, err = strconv.ParseInt(limits[0], 10, 0)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
+	objs := repository.All(int(from), int(limit))
+	if objs == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	render.JSON(w, r, objs) // A chi router helper for serializing and returning json
 }
