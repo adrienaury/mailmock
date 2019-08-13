@@ -11,13 +11,10 @@ LDFLAGS += -X main.version=${VERSION} -X main.commit=${COMMIT_HASH} -X main.date
 # Project variables
 DOCKER_IMAGE = adrienaury/mailmock
 DOCKER_TAG ?= $(shell echo -n ${VERSION} | sed -e 's/[^A-Za-z0-9_\\.-]/_/g')
-RELEASE := $(shell [ "$${VERSION\#[0-9]*\.[0-9]*\.[0-9]*}" != "${VERSION}" ] && echo 1 || echo 0 )
+RELEASE := $(shell [[ $(VERSION) =~ ^[0-9]*.[0-9]*.[0-9]*$$ ]] && echo 1 || echo 0 )
 MAJOR := $(shell echo $(VERSION) | cut -f1 -d.)
 MINOR := $(shell echo $(VERSION) | cut -f2 -d.)
-PATCH := $(shell echo $(VERSION) | cut -f3 -d.)
-
-debug:
-	echo Major=${MAJOR} Minor=${MINOR} Patch=${PATCH}
+PATCH := $(shell echo $(VERSION) | cut -f3 -d. | cut -f1 -d-)
 
 .PHONY: help
 .DEFAULT_GOAL := help
