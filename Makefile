@@ -11,6 +11,13 @@ LDFLAGS += -X main.version=${VERSION} -X main.commit=${COMMIT_HASH} -X main.date
 # Project variables
 DOCKER_IMAGE = adrienaury/mailmock
 DOCKER_TAG ?= $(shell echo -n ${VERSION} | sed -e 's/[^A-Za-z0-9_\\.-]/_/g')
+RELEASE := $(shell [ "$${VERSION\#[0-9]*\.[0-9]*\.[0-9]*}" != "${VERSION}" ] && echo 1 || echo 0 )
+MAJOR := $(shell echo $(VERSION) | cut -f1 -d.)
+MINOR := $(shell echo $(VERSION) | cut -f2 -d.)
+PATCH := $(shell echo $(VERSION) | cut -f3 -d.)
+
+debug:
+	echo Major=${MAJOR} Minor=${MINOR} Patch=${PATCH}
 
 .PHONY: help
 .DEFAULT_GOAL := help
@@ -53,7 +60,15 @@ release: clean $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binari
 .PHONY: docker
 docker: ## Build docker image locally
 	docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+ifeq (${RELEASE}, 1)
+	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:${MAJOR}.${MINOR}
+	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:${MAJOR}
+endif
 
 .PHONY: push
 push: docker ## Push docker image on DockerHub
 	docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+ifeq (${RELEASE}, 1)
+	docker push ${DOCKER_IMAGE}:${MAJOR}.${MINOR}
+	docker push ${DOCKER_IMAGE}:${MAJOR}
+endif
