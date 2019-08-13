@@ -36,6 +36,12 @@ func Use(ID int) interface{} {
 }
 
 // All returns all objects currently stored.
-func All() []interface{} {
-	return storedObjects
+func All(from, limit int) []interface{} {
+	if from < len(storedObjects) {
+		if from+limit < len(storedObjects) {
+			return storedObjects[from : from+limit]
+		}
+		return storedObjects[from:]
+	}
+	return []interface{}{}
 }
