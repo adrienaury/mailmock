@@ -8,6 +8,10 @@ BUILD_DATE ?= $(shell date +%FT%T%z)
 BUILD_BY ?= $(shell git config user.email)
 LDFLAGS += -X main.version=${VERSION} -X main.commit=${COMMIT_HASH} -X main.date=${BUILD_DATE} -X main.builtBy=${BUILD_BY}
 
+# Project variables
+DOCKER_IMAGE = adrienaury/mailmock
+DOCKER_TAG ?= $(shell echo -n ${VERSION} | sed -e 's/[^A-Za-z0-9_\\.-]/_/g')
+
 .PHONY: help
 .DEFAULT_GOAL := help
 help:
@@ -38,3 +42,18 @@ run-%: build-%
 
 .PHONY: run
 run: $(patsubst cmd/%,run-%,$(wildcard cmd/*)) ## Build and execute a binary
+
+.PHONY: release-%
+release-%: mkdir
+	go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
+
+.PHONY: release
+release: clean $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
+
+.PHONY: docker
+docker: ## Build docker image locally
+	docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+
+.PHONY: push
+push: docker ## Push docker image on DockerHub
+	docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
