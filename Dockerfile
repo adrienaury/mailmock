@@ -12,6 +12,9 @@ RUN go mod download
 
 COPY . /workspace
 
+ARG VERSION
+ARG BUILD_BY
+
 RUN make release
 
 FROM gcr.io/distroless/base

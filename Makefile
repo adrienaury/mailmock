@@ -56,10 +56,11 @@ release: clean $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binari
 
 .PHONY: docker
 docker: ## Build docker image locally
-	docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+	docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} .
 ifeq (${RELEASE}, 1)
 	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:${MAJOR}.${MINOR}
 	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:${MAJOR}
+	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
 endif
 
 .PHONY: push
@@ -68,4 +69,5 @@ push: docker ## Push docker image on DockerHub
 ifeq (${RELEASE}, 1)
 	docker push ${DOCKER_IMAGE}:${MAJOR}.${MINOR}
 	docker push ${DOCKER_IMAGE}:${MAJOR}
+	docker push ${DOCKER_IMAGE}:latest
 endif
