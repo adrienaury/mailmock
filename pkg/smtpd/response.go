@@ -1,5 +1,3 @@
-// Package smtpd contains source code of the SMTP server of Mailmock
-//
 // Copyright (C) 2019  Adrien Aury
 //
 // This file is part of Mailmock.
@@ -33,6 +31,7 @@
 // this exception to your version of the library, but you are not
 // obligated to do so.  If you do not wish to do so, delete this
 // exception statement from your version.
+
 package smtpd
 
 import (
@@ -40,18 +39,18 @@ import (
 	"strings"
 )
 
-// Response holds a 3 digit code and a messsage
+// Response holds a 3 digit code and a messsage.
 type Response struct {
 	Code int16
 	Msg  string
 }
 
-// IsError returns true if the response is an error
+// IsError returns true if the response is an error.
 func (e Response) IsError() bool {
 	return strings.HasPrefix(e.String(), "5")
 }
 
-// IsSuccess returns true if the response is an success
+// IsSuccess returns true if the response is an success.
 func (e Response) IsSuccess() bool {
 	return !e.IsError()
 }

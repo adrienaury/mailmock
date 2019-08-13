@@ -1,5 +1,3 @@
-// Package smtpd contains source code of the SMTP server of Mailmock
-//
 // Copyright (C) 2019  Adrien Aury
 //
 // This file is part of Mailmock.
@@ -33,13 +31,14 @@
 // this exception to your version of the library, but you are not
 // obligated to do so.  If you do not wish to do so, delete this
 // exception statement from your version.
+
 package smtpd
 
 import (
 	"strings"
 )
 
-// Command is a parsed SMTP command
+// Command is a parsed SMTP command.
 type Command struct {
 	FullCmd        string
 	Name           string
@@ -66,7 +65,7 @@ var listOfValidCommands = map[string]cmdDescription{
 }
 
 // ParseCommand parses a SMTP command, returns appropriate response if the command is malformed
-// If the command is well formed, returned response is nil
+// If the command is well formed, returned response is nil.
 func ParseCommand(input string) (*Command, *Response) {
 	elmts := strings.Split(input, " ")
 	name := strings.ToUpper(strings.TrimSpace(elmts[0]))

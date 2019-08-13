@@ -1,5 +1,3 @@
-// Package repository handles storage access for Mailmock REST API
-//
 // Copyright (C) 2019  Adrien Aury
 //
 // This file is part of Mailmock.
@@ -16,18 +14,20 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Mailmock.  If not, see <https://www.gnu.org/licenses/>.
+
+// Package repository handles storage access for Mailmock REST API.
 package repository
 
 var storedObjects = []interface{}{}
 
-// Store store th object and give an ID for
+// Store stores th object and gives it an ID.
 func Store(o interface{}) int {
 	id := len(storedObjects)
 	storedObjects = append(storedObjects, o)
 	return id
 }
 
-// Use returns the object with ID or nil
+// Use returns the object with ID or nil.
 func Use(ID int) interface{} {
 	if ID < len(storedObjects) {
 		return storedObjects[ID]
@@ -35,7 +35,7 @@ func Use(ID int) interface{} {
 	return nil
 }
 
-// All returns all objects currently stored
+// All returns all objects currently stored.
 func All() []interface{} {
 	return storedObjects
 }

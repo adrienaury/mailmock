@@ -1,5 +1,3 @@
-// Package httpd exposes the REST API of Mailmock
-//
 // Copyright (C) 2019  Adrien Aury
 //
 // This file is part of Mailmock.
@@ -16,6 +14,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Mailmock.  If not, see <https://www.gnu.org/licenses/>.
+
 package httpd
 
 import (
@@ -28,7 +27,7 @@ import (
 	"github.com/go-chi/render"
 )
 
-// Routes returns a configures router for REST API serving
+// Routes returns a configured router for REST API serving.
 func Routes() *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(

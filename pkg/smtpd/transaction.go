@@ -1,5 +1,3 @@
-// Package smtpd contains source code of the SMTP server of Mailmock
-//
 // Copyright (C) 2019  Adrien Aury
 //
 // This file is part of Mailmock.
@@ -33,6 +31,7 @@
 // this exception to your version of the library, but you are not
 // obligated to do so.  If you do not wish to do so, delete this
 // exception statement from your version.
+
 package smtpd
 
 import (
@@ -40,7 +39,7 @@ import (
 	"strings"
 )
 
-// TransactionState is the state of a Transaction
+// TransactionState is the state of a Transaction.
 type TransactionState string
 
 // Transaction States
@@ -59,12 +58,12 @@ type Transaction struct {
 	History []string         `json:"history"`
 }
 
-// NewTransaction creates a new SMTP transaction with initial state set to TSInitiated
+// NewTransaction creates a new SMTP transaction with initial state set to TSInitiated.
 func NewTransaction() *Transaction {
 	return &Transaction{State: TSInitiated}
 }
 
-// Process reads the given command, updates the transaction and returns appropriate response
+// Process reads the given command, updates the transaction and returns appropriate response.
 func (tr *Transaction) Process(cmd *Command) (*Response, error) {
 	if tr != nil {
 		tr.History = append(tr.History, cmd.FullCmd)
@@ -79,7 +78,7 @@ func (tr *Transaction) Process(cmd *Command) (*Response, error) {
 	return nil, fmt.Errorf("No transaction available to process [%v]", cmd)
 }
 
-// Data sets full data, this method can only be user during TSData phase
+// Data sets full data, this method can only be user during TSData phase.
 func (tr *Transaction) Data(data []string) (*Response, error) {
 	if tr != nil && tr.State == TSData {
 		tr.History = append(tr.History, data...)
@@ -93,7 +92,7 @@ func (tr *Transaction) Data(data []string) (*Response, error) {
 	return nil, fmt.Errorf("No transaction available to process data")
 }
 
-// Abort sets transaction's state to TSAborted
+// Abort sets transaction's state to TSAborted.
 func (tr *Transaction) Abort() error {
 	if tr != nil && (tr.State == TSInitiated || tr.State == TSInProgress || tr.State == TSData) {
 		tr.State = TSAborted

@@ -1,5 +1,3 @@
-// Package httpd exposes the REST API of Mailmock
-//
 // Copyright (C) 2019  Adrien Aury
 //
 // This file is part of Mailmock.
@@ -16,6 +14,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Mailmock.  If not, see <https://www.gnu.org/licenses/>.
+
+// Package httpd exposes the REST API of Mailmock
 package httpd
 
 import (
@@ -26,19 +26,19 @@ import (
 	"github.com/go-chi/chi"
 )
 
-// Server is holding the HTTP server properties
+// Server is holding the HTTP server properties.
 type Server struct {
 	name string
 	host string
 	port string
 }
 
-// NewServer creates a HTTP server
+// NewServer creates a HTTP server.
 func NewServer(name string, host string, port string) *Server {
 	return &Server{name, host, port}
 }
 
-// ListenAndServe starts listening for clients connection and serves requests
+// ListenAndServe starts listening for clients connection and serves requests.
 func (srv *Server) ListenAndServe() {
 	router := Routes()
 

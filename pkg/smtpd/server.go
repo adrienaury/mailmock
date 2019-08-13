@@ -1,5 +1,3 @@
-// Package smtpd contains source code of the SMTP server of Mailmock
-//
 // Copyright (C) 2019  Adrien Aury
 //
 // This file is part of Mailmock.
@@ -33,6 +31,8 @@
 // this exception to your version of the library, but you are not
 // obligated to do so.  If you do not wish to do so, delete this
 // exception statement from your version.
+
+// Package smtpd contains source code of the SMTP server of Mailmock.
 package smtpd
 
 import (
@@ -41,7 +41,7 @@ import (
 	"net/textproto"
 )
 
-// Server is holding the SMTP server properties
+// Server is holding the SMTP server properties.
 type Server struct {
 	name string
 	host string
@@ -49,12 +49,12 @@ type Server struct {
 	th   *TransactionHandler
 }
 
-// NewServer creates a SMTP server
+// NewServer creates a SMTP server.
 func NewServer(name string, host string, port string, th *TransactionHandler) *Server {
 	return &Server{name, host, port, th}
 }
 
-// ListenAndServe starts listening for clients connection and serves SMTP commands
+// ListenAndServe starts listening for clients connection and serves SMTP commands.
 func (srv *Server) ListenAndServe() {
 	ln, err := net.Listen("tcp", net.JoinHostPort(srv.host, srv.port))
 	if err != nil {

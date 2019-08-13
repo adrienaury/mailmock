@@ -1,5 +1,3 @@
-// Package smtpd contains source code of the SMTP server of Mailmock
-//
 // Copyright (C) 2019  Adrien Aury
 //
 // This file is part of Mailmock.
@@ -33,6 +31,7 @@
 // this exception to your version of the library, but you are not
 // obligated to do so.  If you do not wish to do so, delete this
 // exception statement from your version.
+
 package smtpd
 
 import (
@@ -41,7 +40,7 @@ import (
 	"net/textproto"
 )
 
-// SessionState is the state of a Session
+// SessionState is the state of a Session.
 type SessionState string
 
 // Session States
@@ -52,10 +51,10 @@ const (
 	SSClosed    SessionState = "closed"
 )
 
-// TransactionHandler will be called each time a transaction reach TSCompleted or TSAborted status
+// TransactionHandler will be called each time a transaction reach TSCompleted or TSAborted status.
 type TransactionHandler func(*Transaction)
 
-// Session :
+// Session represents a SMTP session of a client.
 type Session struct {
 	state  SessionState
 	client string
@@ -64,14 +63,14 @@ type Session struct {
 	th     *TransactionHandler
 }
 
-// NewSession return a new Session
+// NewSession return a new Session.
 func NewSession(c *textproto.Conn, th *TransactionHandler) *Session {
 	s := &Session{state: SSInitiated, conn: c, th: th}
 	log.Printf("[%p] New session initiated", s)
 	return s
 }
 
-// Serve will reponds to any request until a QUIT command is received or connection is broken
+// Serve will reponds to any request until a QUIT command is received or connection is broken.
 func (s *Session) Serve() {
 	if s.state == SSClosed {
 		s.conn.PrintfLine("%v", Response{421, "Service not available, closing transmission channel"})
