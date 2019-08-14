@@ -9,12 +9,12 @@ import (
 
 func TestResponse(t *testing.T) {
 	response := smtpd.Response{250, "OK"}
-	assert.Equal(t, "250 OK", response.String(), "")
-	assert.Equal(t, false, response.IsError(), "")
-	assert.Equal(t, true, response.IsSuccess(), "")
+	assert.Equal(t, "250 OK", response.String(), "Response is not parsed correctly")
+	assert.Equal(t, false, response.IsError(), "Response code 250 indicates a success")
+	assert.Equal(t, true, response.IsSuccess(), "Response code 250 indicates a success")
 
 	response = smtpd.Response{500, "Not OK"}
-	assert.Equal(t, "500 Not OK", response.String(), "")
-	assert.Equal(t, true, response.IsError(), "")
-	assert.Equal(t, false, response.IsSuccess(), "")
+	assert.Equal(t, "500 Not OK", response.String(), "Response is not parsed correctly")
+	assert.Equal(t, true, response.IsError(), "Response code 500 indicates a failure")
+	assert.Equal(t, false, response.IsSuccess(), "Response code 500 indicates a failure")
 }

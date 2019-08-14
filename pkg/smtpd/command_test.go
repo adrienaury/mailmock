@@ -44,20 +44,20 @@ import (
 
 func testOk(t *testing.T, input string, exname string, expargs []string, exnargs map[string]string) {
 	cmd, res := smtpd.ParseCommand(input)
-	assert.NotNil(t, cmd)
-	assert.Equal(t, input, cmd.FullCmd)
-	assert.Equal(t, exname, cmd.Name)
-	assert.Equal(t, expargs, cmd.PositionalArgs)
-	assert.Equal(t, exnargs, cmd.NamedArgs)
-	assert.Nil(t, res)
+	assert.NotNil(t, cmd, "Parsing a valid command MUST NOT return a nil value")
+	assert.Equal(t, input, cmd.FullCmd, "FullCmd MUST contain the original full command")
+	assert.Equal(t, exname, cmd.Name, "Parsed command name is invalid")
+	assert.Equal(t, expargs, cmd.PositionalArgs, "Parsed positional arguments are invalid")
+	assert.Equal(t, exnargs, cmd.NamedArgs, "Parsed named arguments are invalid")
+	assert.Nil(t, res, "Parsing a valid command MUST return a nil response")
 }
 
 func testKo(t *testing.T, input string, code int16, msg string) {
 	cmd, res := smtpd.ParseCommand(input)
-	assert.Nil(t, cmd)
-	assert.NotNil(t, res)
-	assert.Equal(t, code, res.Code)
-	assert.Equal(t, msg, res.Msg)
+	assert.Nil(t, cmd, "Parsing an invalid command MUST return nil")
+	assert.NotNil(t, res, "Parsing an invalid command MUST return a non nil error response")
+	assert.Equal(t, code, res.Code, "Response code is not valid")
+	assert.Equal(t, msg, res.Msg, "Response message is not valid")
 }
 
 func TestCommandNominal(t *testing.T) {
