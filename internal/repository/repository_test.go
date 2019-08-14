@@ -28,27 +28,27 @@ func TestRepositoryAll(t *testing.T) {
 	repository.Store("5")
 
 	slice, full := repository.All(0, 2)
-	assert.Equal(t, []interface{}{"1", "2"}, slice, "")
+	assert.Equal(t, map[int]interface {}{0:"1", 1:"2"}, slice, "")
 	assert.Equal(t, false, full, "")
 
 	slice, full = repository.All(0, 5)
-	assert.Equal(t, []interface{}{"1", "2", "3", "4", "5"}, slice, "")
+	assert.Equal(t, map[int]interface {}{0:"1", 1:"2", 2:"3", 3:"4", 4:"5"}, slice, "")
 	assert.Equal(t, true, full, "")
 
 	slice, full = repository.All(0, 10)
-	assert.Equal(t, []interface{}{"1", "2", "3", "4", "5"}, slice, "")
+	assert.Equal(t, map[int]interface {}{0:"1", 1:"2", 2:"3", 3:"4", 4:"5"}, slice, "")
 	assert.Equal(t, true, full, "")
 
 	slice, full = repository.All(2, 2)
-	assert.Equal(t, []interface{}{"3", "4"}, slice, "")
+	assert.Equal(t, map[int]interface {}{2:"3", 3:"4"}, slice, "")
 	assert.Equal(t, false, full, "")
 
 	slice, full = repository.All(2, 5)
-	assert.Equal(t, []interface{}{"3", "4", "5"}, slice, "")
+	assert.Equal(t, map[int]interface {}{2:"3", 3:"4", 4:"5"}, slice, "")
 	assert.Equal(t, false, full, "")
 
 	slice, full = repository.All(5, 5)
-	assert.Equal(t, []interface{}{}, slice, "")
+	assert.Equal(t, map[int]interface {}{}, slice, "")
 	assert.Equal(t, false, full, "")
 
 	slice, full = repository.All(10, 5)

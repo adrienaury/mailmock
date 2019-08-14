@@ -36,17 +36,17 @@ func Use(ID int) interface{} {
 }
 
 // All returns all objects currently stored.
-func All(from, limit int) ([]interface{}, bool) {
+func All(from, limit int) (map[int]interface{}, bool) {
 	if from < len(storedObjects) {
 		if from+limit < len(storedObjects) {
-			return storedObjects[from : from+limit], false
+			return tomap(from, from+limit), false
 		}
-		return storedObjects[from:], from == 0
+		return tomap(from, len(storedObjects)), from == 0
 	}
 	if from > len(storedObjects) {
 		return nil, false
 	}
-	return []interface{}{}, from == 0
+	return map[int]interface{}{}, from == 0
 }
 
 // Reset removes all objects in storage.
@@ -57,4 +57,12 @@ func Reset() {
 // Len gives the total number of objects stored.
 func Len() int {
 	return len(storedObjects)
+}
+
+func tomap(start, end int) map[int]interface{} {
+	m := make(map[int]interface{})
+	for i := start; i < end; i++ {
+		m[i] = storedObjects[i]
+	}
+	return m
 }
