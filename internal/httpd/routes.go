@@ -18,6 +18,7 @@
 package httpd
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -67,6 +68,8 @@ func getOne(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, obj) // A chi router helper for serializing and returning json
 }
 
+const maxLimit = 50
+
 func getAll(w http.ResponseWriter, r *http.Request) {
 	var from, limit int64
 	var err error
@@ -91,11 +94,22 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	objs := repository.All(int(from), int(limit))
+	if limit > maxLimit {
+		http.Error(w, fmt.Sprintf("Maximum allowed limit is %v", maxLimit), http.StatusBadRequest)
+		return
+	}
+
+	objs, all := repository.All(int(from), int(limit))
 	if objs == nil {
 		http.NotFound(w, r)
 		return
 	}
+
+	if !all {
+		render.Status(r, http.StatusPartialContent)
+	}
+	w.Header().Set("Content-Range", fmt.Sprintf("%v-%v/%v", from, from+limit, repository.Len()))
+	w.Header().Set("Accept-Range", fmt.Sprintf("%v %v", "mailmock", maxLimit))
 
 	render.JSON(w, r, objs) // A chi router helper for serializing and returning json
 }

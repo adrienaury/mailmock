@@ -36,14 +36,22 @@ func Use(ID int) interface{} {
 }
 
 // All returns all objects currently stored.
-func All(from, limit int) []interface{} {
+func All(from, limit int) ([]interface{}, bool) {
 	if from < len(storedObjects) {
 		if from+limit < len(storedObjects) {
-			return storedObjects[from : from+limit]
+			return storedObjects[from : from+limit], false
 		}
-		return storedObjects[from:]
+		return storedObjects[from:], from == 0
 	}
-	return []interface{}{}
+	if from > len(storedObjects) {
+		return nil, false
+	}
+	return []interface{}{}, from == 0
+}
+
+// Reset removes all objects in storage.
+func Reset() {
+	storedObjects = []interface{}{}
 }
 
 // Len gives the total number of objects stored.
