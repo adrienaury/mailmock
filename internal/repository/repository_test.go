@@ -20,31 +20,38 @@ func TestRepositoryNil(t *testing.T) {
 }
 
 func TestRepositoryAll(t *testing.T) {
-	id := repository.Len()
+	repository.Reset()
 	repository.Store("1")
 	repository.Store("2")
 	repository.Store("3")
 	repository.Store("4")
 	repository.Store("5")
 
-	slice := repository.All(id, 2)
+	slice, full := repository.All(0, 2)
 	assert.Equal(t, []interface{}{"1", "2"}, slice, "")
+	assert.Equal(t, false, full, "")
 
-	slice = repository.All(id, 5)
+	slice, full = repository.All(0, 5)
 	assert.Equal(t, []interface{}{"1", "2", "3", "4", "5"}, slice, "")
+	assert.Equal(t, true, full, "")
 
-	slice = repository.All(id, 10)
+	slice, full = repository.All(0, 10)
 	assert.Equal(t, []interface{}{"1", "2", "3", "4", "5"}, slice, "")
+	assert.Equal(t, true, full, "")
 
-	slice = repository.All(id+2, 2)
+	slice, full = repository.All(2, 2)
 	assert.Equal(t, []interface{}{"3", "4"}, slice, "")
+	assert.Equal(t, false, full, "")
 
-	slice = repository.All(id+2, 5)
+	slice, full = repository.All(2, 5)
 	assert.Equal(t, []interface{}{"3", "4", "5"}, slice, "")
+	assert.Equal(t, false, full, "")
 
-	slice = repository.All(id+5, 5)
+	slice, full = repository.All(5, 5)
 	assert.Equal(t, []interface{}{}, slice, "")
+	assert.Equal(t, false, full, "")
 
-	slice = repository.All(id+10, 5)
-	assert.Equal(t, []interface{}{}, slice, "")
+	slice, full = repository.All(10, 5)
+	assert.Nil(t, slice, "")
+	assert.Equal(t, false, full, "")
 }
