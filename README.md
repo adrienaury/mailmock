@@ -1,22 +1,19 @@
+# Mailmock
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/adrienaury/mailmock)](https://goreportcard.com/report/github.com/adrienaury/mailmock)
 [![Github Release Card](https://img.shields.io/github/release/adrienaury/mailmock)](https://github.com/adrienaury/mailmock/releases)
 [![codecov](https://codecov.io/gh/adrienaury/mailmock/branch/master/graph/badge.svg)](https://codecov.io/gh/adrienaury/mailmock)
-
-Mailmock
-========
 
 Mailmock is a lightweight SMTP server designed for testing. It exposes a REST API which will enable your CI/CD to check what transaction were made and what was sent to who.
 
 Mailmock is inspired by Mailhog, but doesn't expose a graphical user interface.
 
-Features
---------
+## Features
 
 - SMTP Server implementing RFC5321
 - HTTP REST API to list transactions and mails the SMTP server handles
 
-Installation
-------------
+## Installation
 
 For now, just run it:
 
@@ -24,20 +21,17 @@ For now, just run it:
 
 Next releases will come with Docker images and more configuration options.
 
-Contribute
-----------
+## Contribute
 
 - Issue Tracker: github.com/adrienaury/mailmock/issues
 - Source Code: github.com/adrienaury/mailmock
 
-Support
--------
+## Support
 
 If you are having issues, please let me know.
 I'm Adrien and my mail is adrien.aury@gmail.com
 
-License
--------
+## License
 
 ### Main license
 
@@ -54,6 +48,7 @@ Some files contains a [GPL linking exception](https://en.wikipedia.org/wiki/GPL_
 ### External user librairies
 
 This project uses the following Go librairies :
+
 - github.com/go-chi/chi v4.0.2+incompatible
 - github.com/go-chi/render v1.0.1
 - github.com/stretchr/testify v1.3.0
@@ -116,4 +111,3 @@ This project uses some standard librairies of the Go language which is licensed 
     THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
