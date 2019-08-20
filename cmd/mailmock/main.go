@@ -40,6 +40,10 @@ var th smtpd.TransactionHandler = func(tr *smtpd.Transaction) {
 	repository.Store(tr)
 }
 
+var eh smtpd.EventHandler = func(ev smtpd.Event) {
+	fmt.Println(ev)
+}
+
 func main() {
 
 	fmt.Printf(`
@@ -75,7 +79,7 @@ func main() {
 	}
 
 	// starts the SMTP server
-	smtpsrv := smtpd.NewServer("mailmock", listenAddr, smtpPort, &th)
+	smtpsrv := smtpd.NewServer("mailmock", listenAddr, smtpPort, &th, &eh)
 	go smtpsrv.ListenAndServe()
 
 	httpsrv := httpd.NewServer("mailmock", listenAddr, httpPort)
