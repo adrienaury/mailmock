@@ -14,7 +14,7 @@ services:
   - docker
 install:
   - 'sudo snap install snapcraft --classic'
-before_script: make info
+before_script: make info VERSION=${TRAVIS_BRANCH}
 script: go test -coverprofile=coverage.txt -covermode=atomic -v ./...
 after_success:
   - bash <(curl -s https://codecov.io/bash) -c
