@@ -20,10 +20,7 @@ after_success:
 deploy:
   - provider: script
     skip_cleanup: true
-    script:
-      - 'curl -sL https://git.io/goreleaser | bash'
-      - 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
-      - 'make push'
+    script: ./build/ci/deploy.sh
     on:
       tags: true
       condition: '$TRAVIS_OS_NAME = linux'
