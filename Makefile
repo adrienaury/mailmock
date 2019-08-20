@@ -1,5 +1,7 @@
 # A Self-Documenting Makefile: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 
+SHELL := /bin/bash # Use bash syntax
+
 # Build variables
 BUILD_DIR ?= .target
 VERSION ?= $(shell git describe --tags --exact-match 2>/dev/null || git symbolic-ref -q --short HEAD)
@@ -20,6 +22,18 @@ PATCH := $(shell echo $(VERSION) | cut -f3 -d. | cut -f1 -d-)
 .DEFAULT_GOAL := help
 help:
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: info
+info: ## Prints build informations
+	@echo COMMIT_HASH=$(COMMIT_HASH)
+	@echo VERSION=$(VERSION)
+	@echo RELEASE=$(RELEASE)
+	@echo MAJOR=$(MAJOR)
+	@echo MINOR=$(MINOR)
+	@echo PATCH=$(PATCH)
+	@echo DOCKER_IMAGE=$(DOCKER_IMAGE)
+	@echo DOCKER_TAG=$(DOCKER_TAG)
+	@echo BUILD_BY=$(BUILD_BY)
 
 .PHONY: clean
 clean: ## Clean builds
@@ -52,10 +66,10 @@ release-%: mkdir
 	GO111MODULE=on go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: release
-release: clean $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
+release: clean info $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
 
 .PHONY: docker
-docker: ## Build docker image locally
+docker: info ## Build docker image locally
 	docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} .
 ifeq (${RELEASE}, 1)
 	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:${MAJOR}.${MINOR}
