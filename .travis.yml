@@ -20,7 +20,7 @@ after_success:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: ./build/ci/deploy.sh
+    script: bash ./build/ci/deploy.sh
     on:
       tags: true
       condition: '$TRAVIS_OS_NAME = linux'
