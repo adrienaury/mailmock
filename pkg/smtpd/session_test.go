@@ -242,7 +242,7 @@ func test(t *testing.T, snd string, rcv string) {
 	c := textproto.NewConn(rwc)
 	assert.NotNil(t, c, "")
 
-	s := smtpd.NewSession(c, nil)
+	s := smtpd.NewSession(c, nil, nil)
 	assert.NotNil(t, s, "")
 
 	s.Serve()
