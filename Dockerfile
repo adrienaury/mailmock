@@ -18,5 +18,5 @@ ARG BUILD_BY
 RUN make release
 
 FROM gcr.io/distroless/base
-COPY --from=builder /workspace/build/* /
+COPY --from=builder /workspace/.target/* /
 CMD ["/mailmock"]
