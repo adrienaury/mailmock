@@ -45,14 +45,14 @@ mkdir:
 
 .PHONY: build-%
 build-%: mkdir
-	go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
+	GO111MODULE=on go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: build
 build: $(patsubst cmd/%,build-%,$(wildcard cmd/*)) ## Build all binaries
 
 .PHONY: test
 test: mkdir ## Run all tests with coverage
-	go test -coverprofile=${BUILD_DIR}/coverage.txt -covermode=atomic ./...
+	GO111MODULE=on go test -coverprofile=${BUILD_DIR}/coverage.txt -covermode=atomic ./...
 
 .PHONY: run-%
 run-%: build-%
@@ -63,7 +63,7 @@ run: $(patsubst cmd/%,run-%,$(wildcard cmd/*)) ## Build and execute a binary
 
 .PHONY: release-%
 release-%: mkdir
-	go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
+	GO111MODULE=on go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: release
 release: clean info $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
