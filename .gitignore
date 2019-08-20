@@ -1,4 +1,5 @@
 /bin/
+/.target/
 /config.*
 !config.toml.dist
 /docker-compose.override.yml
