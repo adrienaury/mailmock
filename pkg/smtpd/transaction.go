@@ -36,7 +36,6 @@ package smtpd
 
 import (
 	"fmt"
-	"strings"
 )
 
 // TransactionState is the state of a Transaction.
@@ -160,5 +159,5 @@ func (tr *Transaction) handleCommandAborted(cmd *Command) (*Response, error) {
 }
 
 func (tr Transaction) String() string {
-	return fmt.Sprintf("Transaction %v:\n%v", tr.State, strings.Join(tr.History, "\n"))
+	return fmt.Sprintf("Transaction %v [%p]", tr.State, &tr)
 }
