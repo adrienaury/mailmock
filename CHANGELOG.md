@@ -36,7 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Possibility to enable relay mode
 
 ## [0.1.2] - 2019-08-20
+
 ### Fixed
+
 - Bug fixed : sequence MAIL FROM -> DATA returns "554 No valid recipients"
 
 ## [0.1.1] - 2019-08-12
