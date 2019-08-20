@@ -70,8 +70,9 @@ type Session struct {
 // NewSession return a new Session.
 func NewSession(c *textproto.Conn, th *TransactionHandler, eh *EventHandler) *Session {
 	s := &Session{state: SSInitiated, conn: c, th: th, eh: eh}
-	s.log(eInfo, "New session initiated",
+	s.eh.log(eInfo, "Initiated new session",
 		Event{
+			"service": "smtp",
 			"session": fmt.Sprintf("%p", s),
 			"state":   s.state,
 			"client":  s.client,
@@ -82,8 +83,9 @@ func NewSession(c *textproto.Conn, th *TransactionHandler, eh *EventHandler) *Se
 // Serve will reponds to any request until a QUIT command is received or connection is broken.
 func (s *Session) Serve() {
 	if s.state == SSClosed {
-		s.log(eWarn, "Cannot serve a closed session",
+		s.eh.log(eWarn, "Cannot serve a closed session",
 			Event{
+				"service": "smtp",
 				"session": fmt.Sprintf("%p", s),
 				"state":   s.state,
 				"client":  s.client,
@@ -93,8 +95,9 @@ func (s *Session) Serve() {
 	}
 
 	if err := s.conn.PrintfLine("%v", Response{220, "Service ready"}); err != nil {
-		s.log(eError, "Failed to send greeting message, quitting session",
+		s.eh.log(eError, "Failed to send greeting message, quitting session",
 			Event{
+				"service": "smtp",
 				"session": fmt.Sprintf("%p", s),
 				"state":   s.state,
 				"client":  s.client,
@@ -108,8 +111,9 @@ func (s *Session) Serve() {
 		var r *Response
 
 		if input, err := s.conn.ReadLine(); err == io.EOF || err == io.ErrClosedPipe {
-			s.log(eError, "Session closed by the client, quitting",
+			s.eh.log(eWarn, "Lost client connection, quitting",
 				Event{
+					"service": "smtp",
 					"session": fmt.Sprintf("%p", s),
 					"state":   s.state,
 					"client":  s.client,
@@ -117,8 +121,9 @@ func (s *Session) Serve() {
 				})
 			r = s.quit()
 		} else if err != nil {
-			s.log(eError, "Network error, requested action cannot be processed",
+			s.eh.log(eError, "Network error, requested action cannot be processed",
 				Event{
+					"service": "smtp",
 					"session": fmt.Sprintf("%p", s),
 					"state":   s.state,
 					"client":  s.client,
@@ -126,27 +131,30 @@ func (s *Session) Serve() {
 				})
 			r = &Response{451, "Requested action aborted: error in processing"}
 		} else {
-			s.log(eInfo, "Received command",
+			s.eh.log(eDebug, "Received command",
 				Event{
+					"service": "smtp",
 					"session": fmt.Sprintf("%p", s),
 					"state":   s.state,
 					"client":  s.client,
 					"command": input,
 				})
 			r = s.receive(input)
+			s.eh.log(eInfo, "Processed command",
+				Event{
+					"service":  "smtp",
+					"session":  fmt.Sprintf("%p", s),
+					"state":    s.state,
+					"client":   s.client,
+					"command":  input,
+					"response": r,
+				})
 		}
 
-		s.log(eInfo, "Response to send",
-			Event{
-				"session":  fmt.Sprintf("%p", s),
-				"state":    s.state,
-				"client":   s.client,
-				"response": r,
-			})
-
 		if err := s.conn.PrintfLine("%v", r); err != nil {
-			s.log(eError, "Network error, failed to send response, quitting",
+			s.eh.log(eError, "Network error, failed to send response, quitting",
 				Event{
+					"service": "smtp",
 					"session": fmt.Sprintf("%p", s),
 					"state":   s.state,
 					"client":  s.client,
@@ -189,8 +197,9 @@ func (s *Session) receive(input string) (res *Response) {
 	case "VRFY":
 		res = s.verify(cmd.PositionalArgs[0])
 	default:
-		s.log(eFatal, "Coding error, this should not happen",
+		s.eh.log(eFatal, "Coding error, this should not happen",
 			Event{
+				"service": "smtp",
 				"session": fmt.Sprintf("%p", s),
 				"state":   s.state,
 				"client":  s.client,
@@ -210,6 +219,14 @@ func (s *Session) mail(cmd *Command) *Response {
 		return &Response{503, "Bad sequence of commands"}
 	}
 	s.tr = NewTransaction()
+	s.eh.log(eDebug, "Started transaction",
+		Event{
+			"service":     "smtp",
+			"session":     fmt.Sprintf("%p", s),
+			"state":       s.state,
+			"client":      s.client,
+			"transaction": s.tr,
+		})
 	res, err := s.tr.Process(cmd)
 	if err != nil {
 		return &Response{451, "Requested action aborted: error in processing"}
@@ -287,14 +304,18 @@ func (s *Session) quit() *Response {
 }
 
 func (s *Session) handleTransaction() {
+	if s.tr != nil {
+		s.eh.log(eDebug, "Ended transaction",
+			Event{
+				"service":     "smtp",
+				"session":     fmt.Sprintf("%p", s),
+				"state":       s.state,
+				"client":      s.client,
+				"transaction": s.tr,
+			})
+	}
 	if s.th != nil && (*s.th) != nil && s.tr != nil {
 		go (*s.th)(s.tr)
 	}
 	s.tr = nil
-}
-
-func (s *Session) log(p eventProducer, message string, base Event) {
-	if s.eh != nil && (*s.eh) != nil {
-		(*s.eh)(p(message, base))
-	}
 }

@@ -36,7 +36,6 @@
 package smtpd
 
 import (
-	"log"
 	"net"
 	"net/textproto"
 )
@@ -59,8 +58,23 @@ func NewServer(name string, host string, port string, th *TransactionHandler, eh
 func (srv *Server) ListenAndServe() {
 	ln, err := net.Listen("tcp", net.JoinHostPort(srv.host, srv.port))
 	if err != nil {
+		srv.eh.log(eFatal, "SMTP Server failed to start",
+			Event{
+				"service": "smtp",
+				"port":    srv.port,
+				"host":    srv.host,
+				"server":  srv.name,
+				"error":   err,
+			})
 		panic(err)
 	}
+	srv.eh.log(eInfo, "SMTP Server is listening",
+		Event{
+			"service": "smtp",
+			"port":    srv.port,
+			"host":    srv.host,
+			"server":  srv.name,
+		})
 	srv.serve(ln)
 }
 
@@ -69,7 +83,14 @@ func (srv *Server) serve(ln net.Listener) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			log.Printf("Error accepting connection: %s\n", err)
+			srv.eh.log(eFatal, "SMTP Server failed to accept connection",
+				Event{
+					"service": "smtp",
+					"port":    srv.port,
+					"host":    srv.host,
+					"server":  srv.name,
+					"error":   err,
+				})
 			continue
 		}
 		go srv.handleConnection(conn)
@@ -82,4 +103,10 @@ func (srv *Server) handleConnection(conn net.Conn) {
 
 	s := NewSession(tpc, srv.th, srv.eh)
 	s.Serve()
+}
+
+func (eh *EventHandler) log(p eventProducer, message string, base Event) {
+	if eh != nil && (*eh) != nil {
+		(*eh)(p(message, base))
+	}
 }
