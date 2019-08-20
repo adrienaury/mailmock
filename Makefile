@@ -64,10 +64,10 @@ release-%: mkdir
 	go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: release
-release: clean $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
+release: clean info $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
 
 .PHONY: docker
-docker: ## Build docker image locally
+docker: info ## Build docker image locally
 	docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} --build-arg VERSION=${VERSION} --build-arg BUILD_BY=${BUILD_BY} .
 ifeq (${RELEASE}, 1)
 	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:${MAJOR}.${MINOR}
