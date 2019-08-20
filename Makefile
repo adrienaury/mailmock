@@ -21,6 +21,18 @@ PATCH := $(shell echo $(VERSION) | cut -f3 -d. | cut -f1 -d-)
 help:
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
 
+.PHONY: info
+info: ## Prints build informations
+	@echo COMMIT_HASH=$(COMMIT_HASH)
+	@echo VERSION=$(VERSION)
+	@echo RELEASE=$(RELEASE)
+	@echo MAJOR=$(MAJOR)
+	@echo MINOR=$(MINOR)
+	@echo PATCH=$(PATCH)
+	@echo DOCKER_IMAGE=$(DOCKER_IMAGE)
+	@echo DOCKER_TAG=$(DOCKER_TAG)
+	@echo BUILD_BY=$(BUILD_BY)
+
 .PHONY: clean
 clean: ## Clean builds
 	rm -rf ${BUILD_DIR}/
