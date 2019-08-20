@@ -47,11 +47,12 @@ type Server struct {
 	host string
 	port string
 	th   *TransactionHandler
+	eh   *EventHandler
 }
 
 // NewServer creates a SMTP server.
-func NewServer(name string, host string, port string, th *TransactionHandler) *Server {
-	return &Server{name, host, port, th}
+func NewServer(name string, host string, port string, th *TransactionHandler, eh *EventHandler) *Server {
+	return &Server{name, host, port, th, eh}
 }
 
 // ListenAndServe starts listening for clients connection and serves SMTP commands.
@@ -79,6 +80,6 @@ func (srv *Server) handleConnection(conn net.Conn) {
 	tpc := textproto.NewConn(conn)
 	defer tpc.Close()
 
-	s := NewSession(tpc, srv.th)
+	s := NewSession(tpc, srv.th, srv.eh)
 	s.Serve()
 }
