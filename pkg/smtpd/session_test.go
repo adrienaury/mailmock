@@ -199,6 +199,26 @@ func TestSessionBadSequence3(t *testing.T) {
 	test(t, snd, rcv)
 }
 
+func TestNoValidRecipients(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"HELO localhost",
+			"MAIL FROM:test",
+			"DATA",
+			"QUIT",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"250 OK",
+			"250 OK",
+			"554 No valid recipients",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
 func TestClosedConnection(t *testing.T) {
 	var (
 		snd string = strings.Join([]string{

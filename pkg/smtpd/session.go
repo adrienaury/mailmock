@@ -176,6 +176,9 @@ func (s *Session) data(cmd *Command) *Response {
 	if s.state != SSBusy {
 		return &Response{503, "Bad sequence of commands"}
 	}
+	if len(s.tr.Mail.Envelope.Recipients) == 0 {
+		return &Response{554, "No valid recipients"}
+	}
 
 	res, err := s.tr.Process(cmd)
 	if err != nil {
