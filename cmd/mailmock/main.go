@@ -58,6 +58,7 @@ func main() {
 	fmt.Printf("%v - Copyright (C) 2019  Adrien Aury\n\n", version)
 	fmt.Println("This program is licensed under the terms of the GNU General Public License v3 (https://www.gnu.org/licenses/gpl-3.0.html)")
 	fmt.Println("Source code and documentation are available at https://github.com/adrienaury/mailmock")
+	fmt.Println()
 
 	defaultSMTPPort := "smtp"
 	defaultHTTPPort := "http"

@@ -76,7 +76,7 @@ func eFatal(message string, base Event) Event {
 
 func (e Event) String() string {
 	var result strings.Builder
-	fmt.Fprintf(&result, "%v %v %v", time.Unix(e[EventFieldTime].(int64), 0).Format(time.RFC3339), e[EventFieldLevel], e[EventFieldMessage])
+	fmt.Fprintf(&result, "%v %v %v", time.Unix(e[EventFieldTime].(int64), 0).Format("2006/01/02 15:04:05"), e[EventFieldLevel], e[EventFieldMessage])
 
 	if len(e) > 3 {
 		result.WriteString(" {")
