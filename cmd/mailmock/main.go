@@ -25,6 +25,9 @@ import (
 	"github.com/adrienaury/mailmock/internal/httpd"
 	"github.com/adrienaury/mailmock/internal/repository"
 	"github.com/adrienaury/mailmock/pkg/smtpd"
+	"github.com/goph/logur"
+	"github.com/goph/logur/adapters/logrusadapter"
+	"github.com/sirupsen/logrus"
 )
 
 // Provisioned by ldflags
@@ -38,10 +41,6 @@ var (
 
 var th smtpd.TransactionHandler = func(tr *smtpd.Transaction) {
 	repository.Store(tr)
-}
-
-var eh smtpd.EventHandler = func(ev smtpd.Event) {
-	fmt.Println(ev)
 }
 
 func main() {
@@ -79,8 +78,20 @@ func main() {
 		listenAddr = defaultListenAddr
 	}
 
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	logrus.SetOutput(os.Stdout)
+	logrus.SetLevel(logrus.InfoLevel)
+
+	logger := logur.WithFields(logrusadapter.New(logrus.StandardLogger()), logur.Fields{
+		"app": "mailmock",
+	})
+
+	loggerSMTP := logur.WithFields(logger, logur.Fields{
+		"service": "smtp",
+	})
+
 	// starts the SMTP server
-	smtpsrv := smtpd.NewServer("mailmock", listenAddr, smtpPort, &th, &eh)
+	smtpsrv := smtpd.NewServer("mailmock", listenAddr, smtpPort, &th, loggerSMTP)
 	go smtpsrv.ListenAndServe()
 
 	httpsrv := httpd.NewServer("mailmock", listenAddr, httpPort)
