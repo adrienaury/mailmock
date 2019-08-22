@@ -35,9 +35,11 @@
 package smtpd
 
 import (
-	"fmt"
 	"io"
 	"net/textproto"
+
+	"github.com/adrienaury/mailmock/pkg/smtpd/log"
+	"github.com/goph/logur"
 )
 
 // SessionState is the state of a Session.
@@ -54,9 +56,6 @@ const (
 // TransactionHandler will be called each time a transaction reach TSCompleted or TSAborted status.
 type TransactionHandler func(*Transaction)
 
-// EventHandler will be called each time an event is logged.
-type EventHandler func(Event)
-
 // Session represents a SMTP session of a client.
 type Session struct {
 	state  SessionState
@@ -64,45 +63,30 @@ type Session struct {
 	tr     *Transaction
 	conn   *textproto.Conn
 	th     *TransactionHandler
-	eh     *EventHandler
+	logger log.Logger
 }
 
 // NewSession return a new Session.
-func NewSession(c *textproto.Conn, th *TransactionHandler, eh *EventHandler) *Session {
-	s := &Session{state: SSInitiated, conn: c, th: th, eh: eh}
-	s.eh.log(eInfo, "Initiated new session",
-		Event{
-			"service": "smtp",
-			"session": fmt.Sprintf("%p", s),
-			"state":   s.state,
-			"client":  s.client,
-		})
+func NewSession(c *textproto.Conn, th *TransactionHandler, logger log.Logger) *Session {
+	s := &Session{state: SSInitiated, conn: c, th: th, logger: nil}
+	l := logur.WithFields(logger, log.Fields{
+		log.FieldSession: s,
+	})
+	s.logger = l
+	s.logger.Info("Initiated new session")
 	return s
 }
 
 // Serve will reponds to any request until a QUIT command is received or connection is broken.
 func (s *Session) Serve() {
 	if s.state == SSClosed {
-		s.eh.log(eWarn, "Cannot serve a closed session",
-			Event{
-				"service": "smtp",
-				"session": fmt.Sprintf("%p", s),
-				"state":   s.state,
-				"client":  s.client,
-			})
+		s.logger.Warn("Cannot serve a closed session")
 		s.conn.PrintfLine("%v", Response{421, "Service not available, closing transmission channel"})
 		return
 	}
 
 	if err := s.conn.PrintfLine("%v", Response{220, "Service ready"}); err != nil {
-		s.eh.log(eError, "Failed to send greeting message, quitting session",
-			Event{
-				"service": "smtp",
-				"session": fmt.Sprintf("%p", s),
-				"state":   s.state,
-				"client":  s.client,
-				"error":   err,
-			})
+		s.logger.Error("Failed to send greeting message, quitting session", log.Fields{log.FieldError: err})
 		s.quit()
 		return
 	}
@@ -111,55 +95,19 @@ func (s *Session) Serve() {
 		var r *Response
 
 		if input, err := s.conn.ReadLine(); err == io.EOF || err == io.ErrClosedPipe {
-			s.eh.log(eWarn, "Lost client connection, quitting",
-				Event{
-					"service": "smtp",
-					"session": fmt.Sprintf("%p", s),
-					"state":   s.state,
-					"client":  s.client,
-					"error":   err,
-				})
+			s.logger.Error("Lost client connection, quitting", log.Fields{log.FieldError: err})
 			r = s.quit()
 		} else if err != nil {
-			s.eh.log(eError, "Network error, requested action cannot be processed",
-				Event{
-					"service": "smtp",
-					"session": fmt.Sprintf("%p", s),
-					"state":   s.state,
-					"client":  s.client,
-					"error":   err,
-				})
+			s.logger.Error("Network error, requested action cannot be processed", log.Fields{log.FieldError: err})
 			r = &Response{451, "Requested action aborted: error in processing"}
 		} else {
-			s.eh.log(eDebug, "Received command",
-				Event{
-					"service": "smtp",
-					"session": fmt.Sprintf("%p", s),
-					"state":   s.state,
-					"client":  s.client,
-					"command": input,
-				})
+			s.logger.Debug("Received command", log.Fields{log.FieldCommand: input})
 			r = s.receive(input)
-			s.eh.log(eInfo, "Processed command",
-				Event{
-					"service":  "smtp",
-					"session":  fmt.Sprintf("%p", s),
-					"state":    s.state,
-					"client":   s.client,
-					"command":  input,
-					"response": r,
-				})
+			s.logger.Info("Processed command", log.Fields{log.FieldCommand: input, log.FieldResponse: r})
 		}
 
 		if err := s.conn.PrintfLine("%v", r); err != nil {
-			s.eh.log(eError, "Network error, failed to send response, quitting",
-				Event{
-					"service": "smtp",
-					"session": fmt.Sprintf("%p", s),
-					"state":   s.state,
-					"client":  s.client,
-					"error":   err,
-				})
+			s.logger.Error("Network error, failed to send response, quitting", log.Fields{log.FieldError: err})
 			s.quit()
 			return
 		}
@@ -197,13 +145,7 @@ func (s *Session) receive(input string) (res *Response) {
 	case "VRFY":
 		res = s.verify(cmd.PositionalArgs[0])
 	default:
-		s.eh.log(eFatal, "Coding error, this should not happen",
-			Event{
-				"service": "smtp",
-				"session": fmt.Sprintf("%p", s),
-				"state":   s.state,
-				"client":  s.client,
-			})
+		s.logger.Error("Coding error, this should not happen")
 	}
 	return res
 }
@@ -219,14 +161,7 @@ func (s *Session) mail(cmd *Command) *Response {
 		return &Response{503, "Bad sequence of commands"}
 	}
 	s.tr = NewTransaction()
-	s.eh.log(eDebug, "Started transaction",
-		Event{
-			"service":     "smtp",
-			"session":     fmt.Sprintf("%p", s),
-			"state":       s.state,
-			"client":      s.client,
-			"transaction": s.tr,
-		})
+	s.logger.Debug("Started transaction")
 	res, err := s.tr.Process(cmd)
 	if err != nil {
 		return &Response{451, "Requested action aborted: error in processing"}
@@ -305,14 +240,7 @@ func (s *Session) quit() *Response {
 
 func (s *Session) handleTransaction() {
 	if s.tr != nil {
-		s.eh.log(eDebug, "Ended transaction",
-			Event{
-				"service":     "smtp",
-				"session":     fmt.Sprintf("%p", s),
-				"state":       s.state,
-				"client":      s.client,
-				"transaction": s.tr,
-			})
+		s.logger.Debug("Ended transaction")
 	}
 	if s.th != nil && (*s.th) != nil && s.tr != nil {
 		go (*s.th)(s.tr)

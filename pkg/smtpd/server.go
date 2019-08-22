@@ -38,43 +38,38 @@ package smtpd
 import (
 	"net"
 	"net/textproto"
+
+	"github.com/adrienaury/mailmock/pkg/smtpd/log"
+	"github.com/goph/logur"
 )
 
 // Server is holding the SMTP server properties.
 type Server struct {
-	name string
-	host string
-	port string
-	th   *TransactionHandler
-	eh   *EventHandler
+	name   string
+	host   string
+	port   string
+	th     *TransactionHandler
+	logger log.Logger
 }
 
 // NewServer creates a SMTP server.
-func NewServer(name string, host string, port string, th *TransactionHandler, eh *EventHandler) *Server {
-	return &Server{name, host, port, th, eh}
+func NewServer(name string, host string, port string, th *TransactionHandler, logger log.Logger) *Server {
+	l := logur.WithFields(logger, log.Fields{
+		log.FieldServer: name,
+		log.FieldHost:   host,
+		log.FieldPort:   port,
+	})
+	return &Server{name, host, port, th, l}
 }
 
 // ListenAndServe starts listening for clients connection and serves SMTP commands.
 func (srv *Server) ListenAndServe() {
 	ln, err := net.Listen("tcp", net.JoinHostPort(srv.host, srv.port))
 	if err != nil {
-		srv.eh.log(eFatal, "SMTP Server failed to start",
-			Event{
-				"service": "smtp",
-				"port":    srv.port,
-				"host":    srv.host,
-				"server":  srv.name,
-				"error":   err,
-			})
+		srv.logger.Error("SMTP Server failed to start", log.Fields{log.FieldError: err})
 		panic(err)
 	}
-	srv.eh.log(eInfo, "SMTP Server is listening",
-		Event{
-			"service": "smtp",
-			"port":    srv.port,
-			"host":    srv.host,
-			"server":  srv.name,
-		})
+	srv.logger.Info("SMTP Server is listening")
 	srv.serve(ln)
 }
 
@@ -83,14 +78,7 @@ func (srv *Server) serve(ln net.Listener) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			srv.eh.log(eFatal, "SMTP Server failed to accept connection",
-				Event{
-					"service": "smtp",
-					"port":    srv.port,
-					"host":    srv.host,
-					"server":  srv.name,
-					"error":   err,
-				})
+			srv.logger.Error("SMTP Server failed to accept connection", log.Fields{log.FieldError: err})
 			continue
 		}
 		go srv.handleConnection(conn)
@@ -101,12 +89,6 @@ func (srv *Server) handleConnection(conn net.Conn) {
 	tpc := textproto.NewConn(conn)
 	defer tpc.Close()
 
-	s := NewSession(tpc, srv.th, srv.eh)
+	s := NewSession(tpc, srv.th, srv.logger)
 	s.Serve()
-}
-
-func (eh *EventHandler) log(p eventProducer, message string, base Event) {
-	if eh != nil && (*eh) != nil {
-		(*eh)(p(message, base))
-	}
 }
