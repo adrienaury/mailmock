@@ -35,7 +35,15 @@ func (c chilogger) middleware(next http.Handler) http.Handler {
 			fields["request-id"] = requestID
 		}
 
-		c.logger.Info("Request completed", fields)
+		switch {
+		case status < 400:
+			c.logger.Info("Request completed", fields)
+		case status >= 400 && status < 500:
+			c.logger.Warn("Request completed", fields)
+		default:
+			c.logger.Error("Request completed", fields)
+		}
+
 	}
 	return http.HandlerFunc(fn)
 }
