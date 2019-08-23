@@ -19,37 +19,40 @@
 package httpd
 
 import (
-	"log"
 	"net"
 	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/adrienaury/mailmock/pkg/smtpd/log"
+	"github.com/goph/logur"
 )
 
 // Server is holding the HTTP server properties.
 type Server struct {
-	name string
-	host string
-	port string
+	name   string
+	host   string
+	port   string
+	logger log.Logger
 }
 
 // NewServer creates a HTTP server.
-func NewServer(name string, host string, port string) *Server {
-	return &Server{name, host, port}
+func NewServer(name string, host string, port string, logger log.Logger) *Server {
+	if logger == nil {
+		logger = log.DefaultLogger
+	}
+	l := logur.WithFields(logger, log.Fields{
+		log.FieldServer: name,
+		log.FieldListen: net.JoinHostPort(host, port),
+	})
+	return &Server{name, host, port, l}
 }
 
 // ListenAndServe starts listening for clients connection and serves requests.
 func (srv *Server) ListenAndServe() {
-	router := Routes()
+	router := srv.Routes()
 
-	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
-		log.Printf("%s %s\n", method, route) // Walk and print out all routes
-		return nil
+	srv.logger.Info("HTTP Server is listening")
+	if err := http.ListenAndServe(net.JoinHostPort(srv.host, srv.port), router); err != nil {
+		srv.logger.Error("HTTP Server failed to start", log.Fields{log.FieldError: err})
+		panic(err)
 	}
-
-	if err := chi.Walk(router, walkFunc); err != nil {
-		log.Panicf("Logging err: %s\n", err.Error()) // panic if there is an error
-	}
-
-	log.Fatal(http.ListenAndServe(net.JoinHostPort(srv.host, srv.port), router))
 }
