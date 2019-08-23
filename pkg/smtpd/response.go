@@ -41,8 +41,8 @@ import (
 
 // Response holds a 3 digit code and a messsage.
 type Response struct {
-	Code int16
-	Msg  string
+	Code int16  `json:"code"`
+	Msg  string `json:"message"`
 }
 
 // IsError returns true if the response is an error.

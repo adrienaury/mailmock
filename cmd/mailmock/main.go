@@ -78,7 +78,9 @@ func main() {
 		listenAddr = defaultListenAddr
 	}
 
-	logrus.SetFormatter(&logrus.TextFormatter{})
+	//logrus.SetFormatter(&logrus.TextFormatter{})
+	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
+	//logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.InfoLevel)
 
@@ -91,10 +93,10 @@ func main() {
 	})
 
 	// starts the SMTP server
-	smtpsrv := smtpd.NewServer("mailmock", listenAddr, smtpPort, &th, loggerSMTP)
+	smtpsrv := smtpd.NewServer("main", listenAddr, smtpPort, &th, loggerSMTP)
 	go smtpsrv.ListenAndServe()
 
-	httpsrv := httpd.NewServer("mailmock", listenAddr, httpPort)
+	httpsrv := httpd.NewServer("main", listenAddr, httpPort)
 	httpsrv.ListenAndServe()
 
 }

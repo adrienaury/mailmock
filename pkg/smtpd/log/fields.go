@@ -2,9 +2,8 @@ package log
 
 // Name of fields, exhaustive list.
 const (
-	FieldPort     = "port"     // A port.
-	FieldHost     = "host"     // A hostname.
-	FieldServer   = "server"   // Name of a server.
+	FieldListen   = "addr"     // Listened address and port.
+	FieldServer   = "server"   // Name of the server.
 	FieldError    = "error"    // Error causing the event.
 	FieldSession  = "session"  // Current session.
 	FieldCommand  = "command"  // Current command being processed.
