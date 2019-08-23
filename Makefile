@@ -28,9 +28,11 @@ info: ## Prints build informations
 	@echo COMMIT_HASH=$(COMMIT_HASH)
 	@echo VERSION=$(VERSION)
 	@echo RELEASE=$(RELEASE)
+ifeq (${RELEASE}, 1)
 	@echo MAJOR=$(MAJOR)
 	@echo MINOR=$(MINOR)
 	@echo PATCH=$(PATCH)
+endif
 	@echo DOCKER_IMAGE=$(DOCKER_IMAGE)
 	@echo DOCKER_TAG=$(DOCKER_TAG)
 	@echo BUILD_BY=$(BUILD_BY)
