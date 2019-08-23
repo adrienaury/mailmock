@@ -21,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   or command line flags using package github.com/spf13/viper
 - Logging with github.com/goph/logur and github.com/sirupsen/logrus
 - Complete documentation
-- Code of conduct (https://www.contributor-covenant.org/)
 - Logo
 
 ### Planned for 1.1.0
