@@ -36,6 +36,8 @@ package smtpd
 
 import (
 	"fmt"
+
+	"github.com/adrienaury/mailmock/pkg/smtpd/msg"
 )
 
 // TransactionState is the state of a Transaction.
@@ -83,7 +85,7 @@ func (tr *Transaction) Data(data []string) (*Response, error) {
 		tr.History = append(tr.History, data...)
 		tr.Mail.Content = data
 		tr.State = TSCompleted
-		r := &Response{250, "OK"}
+		r := &Response{250, msg.Success}
 		tr.History = append(tr.History, ".")
 		tr.History = append(tr.History, r.String())
 		return r, nil
@@ -131,23 +133,23 @@ func (tr *Transaction) handleCommandInitiated(cmd *Command) (*Response, error) {
 	case "MAIL":
 		tr.Mail.Envelope.Sender = cmd.NamedArgs["FROM"]
 		tr.State = TSInProgress
-		return &Response{250, "OK"}, nil
+		return &Response{250, msg.Success}, nil
 	}
-	return &Response{503, "Bad sequence of commands"}, nil
+	return &Response{503, msg.BadSequence}, nil
 }
 
 func (tr *Transaction) handleCommandInProgress(cmd *Command) (*Response, error) {
 	switch cmd.Name {
 	case "RCPT":
 		tr.Mail.Envelope.Recipients = append(tr.Mail.Envelope.Recipients, cmd.NamedArgs["TO"])
-		return &Response{250, "OK"}, nil
+		return &Response{250, msg.Success}, nil
 	case "DATA":
 		if len(tr.Mail.Envelope.Recipients) > 0 {
 			tr.State = TSData
-			return &Response{354, "Start mail input; end with <CRLF>.<CRLF>"}, nil
+			return &Response{354, msg.AskForData}, nil
 		}
 	}
-	return &Response{503, "Bad sequence of commands"}, nil
+	return &Response{503, msg.BadSequence}, nil
 }
 
 func (tr *Transaction) handleCommandCompleted(cmd *Command) (*Response, error) {
