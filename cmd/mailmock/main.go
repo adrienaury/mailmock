@@ -79,12 +79,11 @@ func main() {
 		listenAddr = defaultListenAddr
 	}
 
+	hostname := "Service"
+	hostname, _ = os.Hostname()
+
 	// sets the SMTP greeting banner
-	if hostname, err := os.Hostname(); err == nil {
-		msg.GreetingBanner = fmt.Sprintf("%v Service ready - this is a testing server, it does not deliver e-mails", hostname)
-	} else {
-		msg.GreetingBanner = fmt.Sprintf("Service ready - this is a testing server, it does not deliver e-mails")
-	}
+	msg.GreetingBanner = fmt.Sprintf("%v ready - this is a testing SMTP server, it does not deliver e-mails", hostname)
 
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	logrus.SetOutput(os.Stdout)
