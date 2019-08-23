@@ -78,9 +78,7 @@ func main() {
 		listenAddr = defaultListenAddr
 	}
 
-	//logrus.SetFormatter(&logrus.TextFormatter{})
-	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
-	//logrus.SetFormatter(&logrus.JSONFormatter{})
+	logrus.SetFormatter(&logrus.TextFormatter{})
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.InfoLevel)
 
@@ -92,11 +90,15 @@ func main() {
 		"service": "smtp",
 	})
 
+	loggerHTTP := logur.WithFields(logger, logur.Fields{
+		"service": "http",
+	})
+
 	// starts the SMTP server
 	smtpsrv := smtpd.NewServer("main", listenAddr, smtpPort, &th, loggerSMTP)
 	go smtpsrv.ListenAndServe()
 
-	httpsrv := httpd.NewServer("main", listenAddr, httpPort)
+	httpsrv := httpd.NewServer("main", listenAddr, httpPort, loggerHTTP)
 	httpsrv.ListenAndServe()
 
 }

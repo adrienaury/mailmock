@@ -29,16 +29,15 @@ import (
 )
 
 // Routes returns a configured router for REST API serving.
-func Routes() *chi.Mux {
+func (srv *Server) Routes() *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(
 		render.SetContentType(render.ContentTypeJSON), // Set content-Type headers as application/json
-		middleware.RealIP,
-		middleware.RequestID,
-		middleware.Logger,          // Log API request calls
-		middleware.DefaultCompress, // Compress results, mostly gzipping assets and json
-		middleware.RedirectSlashes, // Redirect slashes to no slash URL versions
-		middleware.Recoverer,       // Recover from panics without crashing server
+		middleware.RequestID,                          // Creates a unique request ID
+		chilogger{srv.logger}.middleware,              // Log API request calls
+		middleware.DefaultCompress,                    // Compress results, mostly gzipping assets and json
+		middleware.RedirectSlashes,                    // Redirect slashes to no slash URL versions
+		middleware.Recoverer,                          // Recover from panics without crashing server
 	)
 
 	router.Route("/v1", func(r chi.Router) {
