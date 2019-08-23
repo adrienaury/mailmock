@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Logging with github.com/goph/logur and github.com/sirupsen/logrus
 - Cleaner logs, color enabled if tty attached
+- Updated SMTP greeting banner
 - Adding pagination to the REST API
 - Go tests for every file
 
