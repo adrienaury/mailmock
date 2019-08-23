@@ -35,6 +35,7 @@
 package smtpd
 
 import (
+	"fmt"
 	"io"
 	"net/textproto"
 
@@ -58,9 +59,9 @@ type TransactionHandler func(*Transaction)
 
 // Session represents a SMTP session of a client.
 type Session struct {
-	state  SessionState
-	client string
-	tr     *Transaction
+	State  SessionState `json:"state"`
+	Client string       `json:"client"`
+	Tr     *Transaction `json:"transaction"`
 	conn   *textproto.Conn
 	th     *TransactionHandler
 	logger log.Logger
@@ -68,7 +69,10 @@ type Session struct {
 
 // NewSession return a new Session.
 func NewSession(c *textproto.Conn, th *TransactionHandler, logger log.Logger) *Session {
-	s := &Session{state: SSInitiated, conn: c, th: th, logger: nil}
+	s := &Session{State: SSInitiated, conn: c, th: th, logger: nil}
+	if logger == nil {
+		logger = log.DefaultLogger
+	}
 	l := logur.WithFields(logger, log.Fields{
 		log.FieldSession: s,
 	})
@@ -79,7 +83,7 @@ func NewSession(c *textproto.Conn, th *TransactionHandler, logger log.Logger) *S
 
 // Serve will reponds to any request until a QUIT command is received or connection is broken.
 func (s *Session) Serve() {
-	if s.state == SSClosed {
+	if s.State == SSClosed {
 		s.logger.Warn("Cannot serve a closed session")
 		s.conn.PrintfLine("%v", Response{421, "Service not available, closing transmission channel"})
 		return
@@ -103,7 +107,11 @@ func (s *Session) Serve() {
 		} else {
 			s.logger.Debug("Received command", log.Fields{log.FieldCommand: input})
 			r = s.receive(input)
-			s.logger.Info("Processed command", log.Fields{log.FieldCommand: input, log.FieldResponse: r})
+			if r.IsError() {
+				s.logger.Warn("Processed command", log.Fields{log.FieldCommand: input, log.FieldResponse: r})
+			} else {
+				s.logger.Info("Processed command", log.Fields{log.FieldCommand: input, log.FieldResponse: r})
+			}
 		}
 
 		if err := s.conn.PrintfLine("%v", r); err != nil {
@@ -111,10 +119,10 @@ func (s *Session) Serve() {
 			s.quit()
 			return
 		}
-		if s.tr != nil && (s.tr.State == TSCompleted || s.tr.State == TSAborted) {
+		if s.Tr != nil && (s.Tr.State == TSCompleted || s.Tr.State == TSAborted) {
 			s.handleTransaction()
 		}
-		if s.state == SSClosed {
+		if s.State == SSClosed {
 			break
 		}
 	}
@@ -151,30 +159,30 @@ func (s *Session) receive(input string) (res *Response) {
 }
 
 func (s *Session) hello(client string) *Response {
-	s.client = client
-	s.state = SSReady
+	s.Client = client
+	s.State = SSReady
 	return &Response{250, "OK"}
 }
 
 func (s *Session) mail(cmd *Command) *Response {
-	if s.state != SSReady {
+	if s.State != SSReady {
 		return &Response{503, "Bad sequence of commands"}
 	}
-	s.tr = NewTransaction()
+	s.Tr = NewTransaction()
 	s.logger.Debug("Started transaction")
-	res, err := s.tr.Process(cmd)
+	res, err := s.Tr.Process(cmd)
 	if err != nil {
 		return &Response{451, "Requested action aborted: error in processing"}
 	}
-	s.state = SSBusy
+	s.State = SSBusy
 	return res
 }
 
 func (s *Session) rcpt(cmd *Command) *Response {
-	if s.state != SSBusy {
+	if s.State != SSBusy {
 		return &Response{503, "Bad sequence of commands"}
 	}
-	res, err := s.tr.Process(cmd)
+	res, err := s.Tr.Process(cmd)
 	if err != nil {
 		return &Response{451, "Requested action aborted: error in processing"}
 	}
@@ -182,14 +190,14 @@ func (s *Session) rcpt(cmd *Command) *Response {
 }
 
 func (s *Session) data(cmd *Command) *Response {
-	if s.state != SSBusy {
+	if s.State != SSBusy {
 		return &Response{503, "Bad sequence of commands"}
 	}
-	if len(s.tr.Mail.Envelope.Recipients) == 0 {
+	if len(s.Tr.Mail.Envelope.Recipients) == 0 {
 		return &Response{554, "No valid recipients"}
 	}
 
-	res, err := s.tr.Process(cmd)
+	res, err := s.Tr.Process(cmd)
 	if err != nil {
 		return &Response{451, "Requested action aborted: error in processing"}
 	}
@@ -200,12 +208,12 @@ func (s *Session) data(cmd *Command) *Response {
 		return &Response{451, "Requested action aborted: error in processing"}
 	}
 
-	res, err = s.tr.Data(data)
+	res, err = s.Tr.Data(data)
 	if err != nil {
 		return &Response{451, "Requested action aborted: error in processing"}
 	}
 
-	s.state = SSReady
+	s.State = SSReady
 	return res
 }
 
@@ -218,32 +226,36 @@ func (s *Session) noop() *Response {
 }
 
 func (s *Session) reset() *Response {
-	err := s.tr.Abort()
+	err := s.Tr.Abort()
 	if err != nil {
 		return &Response{451, "Requested action aborted: error in processing"}
 	}
 
-	if s.client != "" {
-		s.state = SSReady
+	if s.Client != "" {
+		s.State = SSReady
 	} else {
-		s.state = SSInitiated
+		s.State = SSInitiated
 	}
 
 	return &Response{250, "OK"}
 }
 
 func (s *Session) quit() *Response {
-	s.state = SSClosed
-	s.tr.Abort()
+	s.State = SSClosed
+	s.Tr.Abort()
 	return &Response{Code: 221, Msg: "Service closing transmission channel"}
 }
 
 func (s *Session) handleTransaction() {
-	if s.tr != nil {
+	if s.Tr != nil {
 		s.logger.Debug("Ended transaction")
 	}
-	if s.th != nil && (*s.th) != nil && s.tr != nil {
-		go (*s.th)(s.tr)
+	if s.th != nil && (*s.th) != nil && s.Tr != nil {
+		go (*s.th)(s.Tr)
 	}
-	s.tr = nil
+	s.Tr = nil
+}
+
+func (s *Session) String() string {
+	return fmt.Sprintf("%p[%v]", s, s.State)
 }

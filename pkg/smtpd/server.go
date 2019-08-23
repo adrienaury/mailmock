@@ -54,10 +54,12 @@ type Server struct {
 
 // NewServer creates a SMTP server.
 func NewServer(name string, host string, port string, th *TransactionHandler, logger log.Logger) *Server {
+	if logger == nil {
+		logger = log.DefaultLogger
+	}
 	l := logur.WithFields(logger, log.Fields{
 		log.FieldServer: name,
-		log.FieldHost:   host,
-		log.FieldPort:   port,
+		log.FieldListen: net.JoinHostPort(host, port),
 	})
 	return &Server{name, host, port, th, l}
 }
