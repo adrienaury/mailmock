@@ -19,6 +19,7 @@
 package httpd
 
 import (
+	"context"
 	"net"
 	"net/http"
 
@@ -47,12 +48,24 @@ func NewServer(name string, host string, port string, logger log.Logger) *Server
 }
 
 // ListenAndServe starts listening for clients connection and serves requests.
-func (srv *Server) ListenAndServe() {
+func (srv *Server) ListenAndServe(stop <-chan struct{}) error {
 	router := srv.Routes()
 
-	srv.logger.Info("HTTP Server is listening")
-	if err := http.ListenAndServe(net.JoinHostPort(srv.host, srv.port), router); err != nil {
-		srv.logger.Error("HTTP Server failed to start", log.Fields{log.FieldError: err})
-		panic(err)
+	s := http.Server{
+		Addr:    net.JoinHostPort(srv.host, srv.port),
+		Handler: router,
 	}
+
+	go func() {
+		<-stop // wait for stop signal
+		s.Shutdown(context.Background())
+	}()
+
+	srv.logger.Info("HTTP Server is listening")
+	if err := s.ListenAndServe(); err != nil {
+		srv.logger.Error("HTTP Server failed to start", log.Fields{log.FieldError: err})
+		return err
+	}
+	srv.logger.Info("HTTP Server is stopped")
+	return nil
 }

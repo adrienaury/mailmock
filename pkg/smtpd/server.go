@@ -65,14 +65,20 @@ func NewServer(name string, host string, port string, th *TransactionHandler, lo
 }
 
 // ListenAndServe starts listening for clients connection and serves SMTP commands.
-func (srv *Server) ListenAndServe() {
+func (srv *Server) ListenAndServe(stop <-chan struct{}) error {
 	ln, err := net.Listen("tcp", net.JoinHostPort(srv.host, srv.port))
 	if err != nil {
 		srv.logger.Error("SMTP Server failed to start", log.Fields{log.FieldError: err})
-		panic(err)
+		return err
 	}
 	srv.logger.Info("SMTP Server is listening")
+	go func() {
+		<-stop // wait for stop signal
+		ln.Close()
+	}()
 	srv.serve(ln)
+	srv.logger.Info("SMTP Server is stopped")
+	return nil
 }
 
 func (srv *Server) serve(ln net.Listener) {
