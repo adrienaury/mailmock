@@ -29,6 +29,7 @@ import (
 	"github.com/adrienaury/mailmock/pkg/smtpd"
 	"github.com/goph/logur"
 	"github.com/goph/logur/adapters/logrusadapter"
+	"github.com/heptio/workgroup"
 	"github.com/sirupsen/logrus"
 )
 
@@ -103,38 +104,30 @@ func main() {
 		"service": "http",
 	})
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	done := make(chan error, 2)
-	stop := make(chan struct{})
-
-	go func() {
-		<-sigs
-		stop <- struct{}{}
-	}()
-
-	go func() {
+	group := &workgroup.Group{}
+	group.Add(func(stop <-chan struct{}) error {
+		// interrupt/kill signals sent from terminal or host on shutdown
+		interrupt := make(chan os.Signal, 1)
+		signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
+		select {
+		case <-stop:
+			return fmt.Errorf("shutting down OS signal watcher on workgroup stop")
+		case i := <-interrupt:
+			logger.Info(fmt.Sprintf("Received OS signal %s; beginning shutdown...", i))
+			return nil
+		}
+	})
+	group.Add(func(stop <-chan struct{}) error {
 		smtpsrv := smtpd.NewServer("main", listenAddr, smtpPort, &th, loggerSMTP)
-		done <- smtpsrv.ListenAndServe(stop)
-	}()
-
-	go func() {
+		return smtpsrv.ListenAndServe(stop)
+	})
+	group.Add(func(stop <-chan struct{}) error {
 		httpsrv := httpd.NewServer("main", listenAddr, httpPort, loggerHTTP)
-		done <- httpsrv.ListenAndServe(stop)
-	}()
-
-	var stopped, errored bool
-	for i := 0; i < cap(done); i++ {
-		if err := <-done; err != nil {
-			errored = true
-		}
-		if !stopped {
-			stopped = true
-			close(stop)
-		}
-	}
-	if errored {
+		return httpsrv.ListenAndServe(stop)
+	})
+	err := group.Run()
+	if err != nil {
+		logger.Error("Program exited with error", logur.Fields{"error": err})
 		os.Exit(1)
 	}
 }
