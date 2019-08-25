@@ -245,7 +245,7 @@ func test(t *testing.T, snd string, rcv string) {
 	s := smtpd.NewSession(c, nil, nil)
 	assert.NotNil(t, s, "")
 
-	s.Serve()
+	s.Serve(make(chan struct{}, 1))
 
 	responses, err := ioutil.ReadAll(rcvbuf)
 	assert.NoError(t, err, "")
