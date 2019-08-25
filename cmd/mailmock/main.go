@@ -101,11 +101,27 @@ func main() {
 		"service": "http",
 	})
 
-	// starts the SMTP server
-	smtpsrv := smtpd.NewServer("main", listenAddr, smtpPort, &th, loggerSMTP)
-	go smtpsrv.ListenAndServe()
+	done := make(chan error, 2)
+	stop := make(chan struct{})
 
-	httpsrv := httpd.NewServer("main", listenAddr, httpPort, loggerHTTP)
-	httpsrv.ListenAndServe()
+	go func() {
+		smtpsrv := smtpd.NewServer("main", listenAddr, smtpPort, &th, loggerSMTP)
+		done <- smtpsrv.ListenAndServe(stop)
+	}()
 
+	go func() {
+		httpsrv := httpd.NewServer("main", listenAddr, httpPort, loggerHTTP)
+		done <- httpsrv.ListenAndServe(stop)
+	}()
+
+	var stopped bool
+	for i := 0; i < cap(done); i++ {
+		if err := <-done; err != nil {
+			fmt.Println("error: %v", err)
+		}
+		if !stopped {
+			stopped = true
+			close(stop)
+		}
+	}
 }
