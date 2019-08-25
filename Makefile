@@ -79,6 +79,10 @@ ifeq (${RELEASE}, 1)
 	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
 endif
 
+.PHONY: start
+start: docker ## Start a docker container with default parameters
+	docker run -ti --rm -p 1080:80 -p 1025:25 ${DOCKER_IMAGE}:${DOCKER_TAG}
+
 .PHONY: push
 push: docker ## Push docker image on DockerHub
 	docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
