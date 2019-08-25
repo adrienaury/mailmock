@@ -99,7 +99,7 @@ func (srv *Server) serve(ln *net.TCPListener, stop <-chan struct{}) {
 			return
 		default:
 		}
-		ln.SetDeadline(time.Now().Add(1e9))
+		ln.SetDeadline(time.Now().Add(1e9)) // 1 second
 		conn, err := ln.Accept()
 		if err != nil {
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
@@ -109,18 +109,19 @@ func (srv *Server) serve(ln *net.TCPListener, stop <-chan struct{}) {
 			continue
 		}
 		srv.waitGroup.Add(1)
-		go srv.handleConnection(conn)
+		go srv.handleConnection(conn.(*net.TCPConn), stop)
 	}
 }
 
-func (srv *Server) handleConnection(conn net.Conn) {
+func (srv *Server) handleConnection(conn *net.TCPConn, stop <-chan struct{}) {
 	defer srv.un(srv.trace("handleConnection"))
 	tpc := textproto.NewConn(conn)
 	defer tpc.Close()
 	defer srv.waitGroup.Done()
 
 	s := NewSession(tpc, srv.th, srv.logger)
-	s.Serve()
+	s.tcpConn = conn
+	s.Serve(stop)
 }
 
 func (srv *Server) trace(s string) string {

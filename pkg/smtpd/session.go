@@ -37,7 +37,9 @@ package smtpd
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/textproto"
+	"time"
 
 	"github.com/adrienaury/mailmock/pkg/smtpd/log"
 	"github.com/goph/logur"
@@ -59,12 +61,13 @@ type TransactionHandler func(*Transaction)
 
 // Session represents a SMTP session of a client.
 type Session struct {
-	State  SessionState `json:"state"`
-	Client string       `json:"client"`
-	Tr     *Transaction `json:"transaction"`
-	conn   *textproto.Conn
-	th     *TransactionHandler
-	logger log.Logger
+	State   SessionState `json:"state"`
+	Client  string       `json:"client"`
+	Tr      *Transaction `json:"transaction"`
+	conn    *textproto.Conn
+	th      *TransactionHandler
+	logger  log.Logger
+	tcpConn *net.TCPConn
 }
 
 // NewSession return a new Session.
@@ -82,7 +85,7 @@ func NewSession(c *textproto.Conn, th *TransactionHandler, logger log.Logger) *S
 }
 
 // Serve will reponds to any request until a QUIT command is received or connection is broken.
-func (s *Session) Serve() {
+func (s *Session) Serve(stop <-chan struct{}) {
 	if s.State == SSClosed {
 		s.logger.Warn("Cannot serve a closed session")
 		s.conn.PrintfLine("%v", r(CodeNotAvailable))
@@ -98,9 +101,25 @@ func (s *Session) Serve() {
 	for {
 		var res *Response
 
+		select {
+		case <-stop:
+			// We need to shutdown
+			s.conn.PrintfLine("%v", r(CodeNotAvailable))
+			return
+		default:
+		}
+
+		if s.tcpConn != nil {
+			// client needs to send command before 2 minutes
+			s.tcpConn.SetReadDeadline(time.Now().Add(time.Minute * 2))
+		}
+
 		if input, err := s.conn.ReadLine(); err == io.EOF || err == io.ErrClosedPipe {
 			s.logger.Error("Lost client connection, quitting", log.Fields{log.FieldError: err})
 			res = s.quit()
+		} else if errop, ok := err.(net.Error); ok && errop.Timeout() {
+			s.conn.PrintfLine("%v", r(CodeNotAvailable))
+			return
 		} else if err != nil {
 			s.logger.Error("Network error, requested action cannot be processed", log.Fields{log.FieldError: err})
 			res = r(CodeAbort)
