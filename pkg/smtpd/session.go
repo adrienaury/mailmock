@@ -101,8 +101,9 @@ func (s *Session) Serve(stop <-chan struct{}) {
 		var res *Response
 
 		if s.tcpConn != nil {
-			// client needs to send command before 2 minutes or session will time out
-			s.tcpConn.SetReadDeadline(time.Now().Add(time.Minute * 2))
+			// SMTP server SHOULD have a timeout of at least 5 minutes while it
+			// is awaiting the next command from the sender (RFC 5321 4.5.3.2.7.)
+			s.tcpConn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 		}
 
 		if input, err := s.conn.ReadLine(); err == io.EOF || err == io.ErrClosedPipe {
