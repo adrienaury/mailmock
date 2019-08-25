@@ -41,8 +41,7 @@ import (
 	"net/textproto"
 	"time"
 
-	"github.com/adrienaury/mailmock/pkg/smtpd/log"
-	"github.com/goph/logur"
+	"github.com/adrienaury/mailmock/internal/log"
 )
 
 // SessionState is the state of a Session.
@@ -76,7 +75,7 @@ func NewSession(c *textproto.Conn, th *TransactionHandler, logger log.Logger) *S
 	if logger == nil {
 		logger = log.DefaultLogger
 	}
-	l := logur.WithFields(logger, log.Fields{
+	l := logger.WithFields(log.Fields{
 		log.FieldSession: s,
 	})
 	s.logger = l
