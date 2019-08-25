@@ -36,6 +36,12 @@ Next releases will come with more configuration options.
 
 ## Contribute
 
+Contributions to this project are very welcome.
+
+If you want to contribute, please check CONTRIBUTING.md
+
+### Links
+
 - Issue Tracker: github.com/adrienaury/mailmock/issues
 - Source Code: github.com/adrienaury/mailmock
 
