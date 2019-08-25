@@ -25,9 +25,9 @@ import (
 	"syscall"
 
 	"github.com/adrienaury/mailmock/internal/httpd"
+	"github.com/adrienaury/mailmock/internal/log"
 	"github.com/adrienaury/mailmock/internal/repository"
 	"github.com/adrienaury/mailmock/pkg/smtpd"
-	"github.com/goph/logur"
 	"github.com/goph/logur/adapters/logrusadapter"
 	"github.com/heptio/workgroup"
 	"github.com/sirupsen/logrus"
@@ -88,20 +88,22 @@ func main() {
 	smtpd.SetReply(smtpd.CodeReady,
 		fmt.Sprintf("%v Mailmock %v Service ready - this is a testing SMTP server, it does not deliver e-mails", hostname, version))
 
+	// logrus initialization
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.InfoLevel)
 
-	logger := logur.WithFields(logrusadapter.New(logrus.StandardLogger()), logur.Fields{
-		"app": "mailmock",
+	logger := log.NewLoggerAdapter(logrusadapter.New(logrus.StandardLogger()))
+	logger = logger.WithFields(log.Fields{
+		log.FieldApp: "mailmock",
 	})
 
-	loggerSMTP := logur.WithFields(logger, logur.Fields{
-		"service": "smtp",
+	loggerSMTP := logger.WithFields(log.Fields{
+		log.FieldService: "smtp",
 	})
 
-	loggerHTTP := logur.WithFields(logger, logur.Fields{
-		"service": "http",
+	loggerHTTP := logger.WithFields(log.Fields{
+		log.FieldService: "http",
 	})
 
 	group := &workgroup.Group{}
@@ -127,7 +129,7 @@ func main() {
 	})
 	err := group.Run()
 	if err != nil {
-		logger.Error("Program exited with error", logur.Fields{"error": err})
+		logger.Error("Program exited with error", log.Fields{log.FieldError: err})
 		os.Exit(1)
 	}
 }

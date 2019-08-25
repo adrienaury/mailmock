@@ -41,8 +41,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/adrienaury/mailmock/pkg/smtpd/log"
-	"github.com/goph/logur"
+	"github.com/adrienaury/mailmock/internal/log"
 )
 
 // Server is holding the SMTP server properties.
@@ -60,7 +59,7 @@ func NewServer(name string, host string, port string, th *TransactionHandler, lo
 	if logger == nil {
 		logger = log.DefaultLogger
 	}
-	l := logur.WithFields(logger, log.Fields{
+	l := logger.WithFields(log.Fields{
 		log.FieldServer: name,
 		log.FieldListen: net.JoinHostPort(host, port),
 	})

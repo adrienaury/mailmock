@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Mailmock.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package httpd exposes the REST API of Mailmock
+// Package httpd exposes the REST API of Mailmock.
 package httpd
 
 import (
@@ -23,8 +23,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/adrienaury/mailmock/pkg/smtpd/log"
-	"github.com/goph/logur"
+	"github.com/adrienaury/mailmock/internal/log"
 )
 
 // Server is holding the HTTP server properties.
@@ -40,7 +39,7 @@ func NewServer(name string, host string, port string, logger log.Logger) *Server
 	if logger == nil {
 		logger = log.DefaultLogger
 	}
-	l := logur.WithFields(logger, log.Fields{
+	l := logger.WithFields(log.Fields{
 		log.FieldServer: name,
 		log.FieldListen: net.JoinHostPort(host, port),
 	})
