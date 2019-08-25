@@ -52,7 +52,7 @@ func testOk(t *testing.T, input string, exname string, expargs []string, exnargs
 	assert.Nil(t, res, "Parsing a valid command MUST return a nil response")
 }
 
-func testKo(t *testing.T, input string, code int16, msg string) {
+func testKo(t *testing.T, input string, code smtpd.Code, msg string) {
 	cmd, res := smtpd.ParseCommand(input)
 	assert.Nil(t, cmd, "Parsing an invalid command MUST return nil")
 	assert.NotNil(t, res, "Parsing an invalid command MUST return a non nil error response")

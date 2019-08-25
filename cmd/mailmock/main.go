@@ -25,7 +25,6 @@ import (
 	"github.com/adrienaury/mailmock/internal/httpd"
 	"github.com/adrienaury/mailmock/internal/repository"
 	"github.com/adrienaury/mailmock/pkg/smtpd"
-	"github.com/adrienaury/mailmock/pkg/smtpd/msg"
 	"github.com/goph/logur"
 	"github.com/goph/logur/adapters/logrusadapter"
 	"github.com/sirupsen/logrus"
@@ -79,11 +78,12 @@ func main() {
 		listenAddr = defaultListenAddr
 	}
 
-	hostname := "Service"
+	hostname := "localhost"
 	hostname, _ = os.Hostname()
 
 	// sets the SMTP greeting banner
-	msg.GreetingBanner = fmt.Sprintf("%v ready - this is a testing SMTP server, it does not deliver e-mails", hostname)
+	smtpd.SetReply(smtpd.CodeReady,
+		fmt.Sprintf("%v Mailmock %v Service ready - this is a testing SMTP server, it does not deliver e-mails", hostname, version))
 
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	logrus.SetOutput(os.Stdout)
