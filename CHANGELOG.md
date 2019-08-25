@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cleaner logs, color enabled if tty attached
 - Updated SMTP greeting banner
 - Adding pagination to the REST API
+- Graceful stops on sigterm and sigint signals
+- SMTP session timeout
 - Go tests for every file
 
 ### Planned for 1.0.0
@@ -32,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gracefull restarts with github.com/cloudflare/tableflip
 - Live reloading of configuration
 - Extend API with search service
-- Possibility to enable relay mode
+- Possibility to enable SMTP relay mode
 
 ## [0.1.2] - 2019-08-20
 
