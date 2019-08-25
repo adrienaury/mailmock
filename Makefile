@@ -45,6 +45,10 @@ clean: ## Clean builds
 mkdir:
 	mkdir -p ${BUILD_DIR}
 
+.PHONY: tidy
+tidy: ## Add missing and remove unused modules
+	GO111MODULE=on go mod tidy
+
 .PHONY: build-%
 build-%: mkdir
 	GO111MODULE=on go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
