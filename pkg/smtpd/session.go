@@ -101,16 +101,8 @@ func (s *Session) Serve(stop <-chan struct{}) {
 	for {
 		var res *Response
 
-		select {
-		case <-stop:
-			// We need to shutdown
-			s.conn.PrintfLine("%v", r(CodeNotAvailable))
-			return
-		default:
-		}
-
 		if s.tcpConn != nil {
-			// client needs to send command before 2 minutes
+			// client needs to send command before 2 minutes or session will time out
 			s.tcpConn.SetReadDeadline(time.Now().Add(time.Minute * 2))
 		}
 
@@ -118,6 +110,7 @@ func (s *Session) Serve(stop <-chan struct{}) {
 			s.logger.Error("Lost client connection, quitting", log.Fields{log.FieldError: err})
 			res = s.quit()
 		} else if errop, ok := err.(net.Error); ok && errop.Timeout() {
+			s.logger.Warn("Session timed out")
 			s.conn.PrintfLine("%v", r(CodeNotAvailable))
 			return
 		} else if err != nil {
@@ -131,6 +124,15 @@ func (s *Session) Serve(stop <-chan struct{}) {
 			} else {
 				s.logger.Info("Processed command", log.Fields{log.FieldCommand: input, log.FieldResponse: res})
 			}
+		}
+
+		select {
+		case <-stop:
+			// We need to shutdown
+			s.logger.Warn("Session interrupted because server is shutting down")
+			s.conn.PrintfLine("%v", r(CodeNotAvailable))
+			return
+		default:
 		}
 
 		if err := s.conn.PrintfLine("%v", res); err != nil {
