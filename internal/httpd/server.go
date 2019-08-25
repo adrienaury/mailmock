@@ -62,8 +62,8 @@ func (srv *Server) ListenAndServe(stop <-chan struct{}) error {
 	}()
 
 	srv.logger.Info("HTTP Server is listening")
-	if err := s.ListenAndServe(); err != nil {
-		srv.logger.Error("HTTP Server failed to start", log.Fields{log.FieldError: err})
+	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		srv.logger.Error("HTTP Server failed", log.Fields{log.FieldError: err})
 		return err
 	}
 	srv.logger.Info("HTTP Server is stopped")

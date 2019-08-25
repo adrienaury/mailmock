@@ -21,6 +21,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/adrienaury/mailmock/internal/httpd"
 	"github.com/adrienaury/mailmock/internal/repository"
@@ -101,8 +103,16 @@ func main() {
 		"service": "http",
 	})
 
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
 	done := make(chan error, 2)
 	stop := make(chan struct{})
+
+	go func() {
+		<-sigs
+		stop <- struct{}{}
+	}()
 
 	go func() {
 		smtpsrv := smtpd.NewServer("main", listenAddr, smtpPort, &th, loggerSMTP)
@@ -114,14 +124,17 @@ func main() {
 		done <- httpsrv.ListenAndServe(stop)
 	}()
 
-	var stopped bool
+	var stopped, errored bool
 	for i := 0; i < cap(done); i++ {
 		if err := <-done; err != nil {
-			fmt.Println("error: %v", err)
+			errored = true
 		}
 		if !stopped {
 			stopped = true
 			close(stop)
 		}
+	}
+	if errored {
+		os.Exit(1)
 	}
 }
