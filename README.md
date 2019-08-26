@@ -56,7 +56,7 @@ I'm Adrien and my mail is adrien.aury@gmail.com
 
 The project is licensed under the [GNU GENERAL PUBLIC LICENSE v3](https://www.gnu.org/licenses/gpl-3.0.html).
 
-### Exception notices
+#### Exception notices
 
 Some files contains a [GPL linking exception](https://en.wikipedia.org/wiki/GPL_linking_exception) to allow linking modules in any project (everything under pkg folder).
 
@@ -67,6 +67,10 @@ This project uses the following Go librairies :
 - github.com/go-chi/chi v4.0.2+incompatible
 - github.com/go-chi/render v1.0.1
 - github.com/stretchr/testify v1.3.0
+- github.com/heptio/workgroup v0.8.0-beta.1
+- github.com/sirupsen/logrus v1.4.2
+- logur.dev/logur v0.15.0
+- logur.dev/adapter/logrus v0.2.0
 
 Here are the required copyright and permission notices :
 
@@ -74,6 +78,8 @@ Here are the required copyright and permission notices :
 Copyright (c) 2015-present Peter Kieltyka (https://github.com/pkieltyka), Google Inc.
 Copyright (c) 2016-Present https://github.com/go-chi authors
 Copyright (c) 2012-2018 Mat Ryer and Tyler Bunnell
+Copyright (c) 2019 Márk Sági-Kazár <mark.sagikazar@gmail.com>
+Copyright (c) 2014 Simon Eskildsen
 
 MIT License
 
@@ -93,6 +99,22 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+```text
+Copyright © 2017 Heptio
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 ```
 
 ### Go standard librairies

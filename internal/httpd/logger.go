@@ -21,12 +21,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/adrienaury/mailmock/internal/log"
 	"github.com/go-chi/chi/middleware"
-	"github.com/goph/logur"
 )
 
 type chilogger struct {
-	logger logur.Logger
+	logger log.Logger
 }
 
 func (c chilogger) middleware(next http.Handler) http.Handler {
@@ -47,7 +47,7 @@ func (c chilogger) middleware(next http.Handler) http.Handler {
 		method := r.Method
 		bytes := ww.BytesWritten()
 
-		fields := logur.Fields{"took": latency, "status": status, "remote": remote, "request": request, "method": method, "bytes": bytes}
+		fields := log.Fields{"took": latency, "status": status, "remote": remote, "request": request, "method": method, "bytes": bytes}
 		if requestID != "" {
 			fields["request-id"] = requestID
 		}

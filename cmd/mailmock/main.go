@@ -28,9 +28,9 @@ import (
 	"github.com/adrienaury/mailmock/internal/log"
 	"github.com/adrienaury/mailmock/internal/repository"
 	"github.com/adrienaury/mailmock/pkg/smtpd"
-	"github.com/goph/logur/adapters/logrusadapter"
 	"github.com/heptio/workgroup"
 	"github.com/sirupsen/logrus"
+	logur "logur.dev/adapter/logrus"
 )
 
 // Provisioned by ldflags
@@ -93,7 +93,7 @@ func main() {
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.InfoLevel)
 
-	logger := log.NewLoggerAdapter(logrusadapter.New(logrus.StandardLogger()))
+	logger := log.NewLoggerAdapter(logur.New(logrus.StandardLogger()))
 	logger = logger.WithFields(log.Fields{
 		log.FieldApp: "mailmock",
 	})

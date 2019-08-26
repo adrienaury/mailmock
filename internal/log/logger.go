@@ -18,9 +18,7 @@
 // Package log contains the Logger interface and everything related.
 package log
 
-import (
-	"github.com/goph/logur"
-)
+import "logur.dev/logur"
 
 // Logger is the fundamental interface for all log operations.
 type Logger interface {
