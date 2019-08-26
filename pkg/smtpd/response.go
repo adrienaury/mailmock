@@ -36,6 +36,7 @@ package smtpd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -93,13 +94,13 @@ const (
 var replyText = map[Code]string{
 	CodeStatusHelp:              "",
 	CodeHelp:                    "",
-	CodeReady:                   "Service ready",
-	CodeClosing:                 "Service closing transmission channel",
+	CodeReady:                   "<domain> Service ready",
+	CodeClosing:                 "<domain> Service closing transmission channel",
 	CodeSuccess:                 "OK",
 	CodeUserNotLocalTemp:        "",
 	CodeCannotVerify:            "",
 	CodeAskForData:              "Start mail input; end with <CRLF>.<CRLF>",
-	CodeNotAvailable:            "Service not available, closing transmission channel",
+	CodeNotAvailable:            "<domain> Service not available, closing transmission channel",
 	CodeMailboxUnavailableTemp:  "",
 	CodeAbort:                   "Requested action aborted: error in processing",
 	CodeInsufficientStorageTemp: "",
@@ -124,4 +125,15 @@ func SetReply(c Code, s string) {
 
 func r(c Code) *Response {
 	return &Response{c, replyText[c]}
+}
+
+func init() {
+	var hostname string
+	var err error
+	if hostname, err = os.Hostname(); err != nil {
+		hostname = "localhost"
+	}
+	for code, text := range replyText {
+		replyText[code] = strings.ReplaceAll(text, "<domain>", hostname)
+	}
 }
