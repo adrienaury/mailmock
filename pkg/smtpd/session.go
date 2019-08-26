@@ -117,7 +117,11 @@ func (s *Session) Serve(stop <-chan struct{}) {
 		s.conn.Close()
 	}()
 
-	for {
+	s.serveLoop(stop)
+}
+
+func (s *Session) serveLoop(stop <-chan struct{}) {
+	for s.State != SSClosed {
 		var res *Response
 
 		if s.tcpConn != nil {
@@ -164,12 +168,7 @@ func (s *Session) Serve(stop <-chan struct{}) {
 			s.quit()
 			return
 		}
-		if s.Tr != nil && (s.Tr.State == TSCompleted || s.Tr.State == TSAborted) {
-			s.handleTransaction()
-		}
-		if s.State == SSClosed {
-			break
-		}
+		s.handleTransaction()
 	}
 }
 
@@ -292,13 +291,13 @@ func (s *Session) quit() *Response {
 }
 
 func (s *Session) handleTransaction() {
-	if s.Tr != nil {
+	if s.Tr != nil && (s.Tr.State == TSCompleted || s.Tr.State == TSAborted) {
 		s.logger.Debug("Ended transaction")
+		if s.th != nil && (*s.th) != nil {
+			(*s.th)(s.Tr)
+		}
+		s.Tr = nil
 	}
-	if s.th != nil && (*s.th) != nil && s.Tr != nil {
-		(*s.th)(s.Tr)
-	}
-	s.Tr = nil
 }
 
 func (s *Session) String() string {
