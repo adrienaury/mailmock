@@ -60,13 +60,14 @@ type TransactionHandler func(*Transaction)
 
 // Session represents a SMTP session of a client.
 type Session struct {
-	State   SessionState `json:"state"`
-	Client  string       `json:"client"`
-	Tr      *Transaction `json:"transaction"`
-	conn    *textproto.Conn
-	th      *TransactionHandler
-	logger  log.Logger
-	tcpConn *net.TCPConn
+	State    SessionState `json:"state"`
+	Client   string       `json:"client"`
+	Tr       *Transaction `json:"transaction"`
+	conn     *textproto.Conn
+	th       *TransactionHandler
+	logger   log.Logger
+	tcpConn  *net.TCPConn
+	mustStop bool
 }
 
 // NewSession return a new Session.
@@ -96,6 +97,25 @@ func (s *Session) Serve(stop <-chan struct{}) {
 		s.quit()
 		return
 	}
+
+	shutdown := make(chan struct{})
+	defer close(shutdown)
+
+	go func() {
+		// Block until either stop or shutdown signal
+		select {
+		case <-stop:
+			s.mustStop = true
+			s.logger.Warn("Server must stop, session will timeout in 30 seconds (at most)")
+			<-time.After(30 * time.Second)
+			if s.tcpConn != nil {
+				s.tcpConn.SetReadDeadline(time.Now())
+			}
+		case <-shutdown:
+		}
+		<-time.After(5 * time.Second)
+		s.conn.Close()
+	}()
 
 	for {
 		var res *Response
