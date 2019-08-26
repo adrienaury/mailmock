@@ -22,6 +22,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/adrienaury/mailmock/internal/log"
 )
@@ -53,6 +54,10 @@ func (srv *Server) ListenAndServe(stop <-chan struct{}) error {
 	s := http.Server{
 		Addr:    net.JoinHostPort(srv.host, srv.port),
 		Handler: router,
+
+		ReadTimeout:       5 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		ReadHeaderTimeout: 20 * time.Second,
 	}
 
 	go func() {
