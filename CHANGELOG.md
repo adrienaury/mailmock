@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SMTP multilines responses
 - HELP command
 - Configurable
+- Refactor Session to use TCPConn
 
 ### Planned for 1.0.0
 
