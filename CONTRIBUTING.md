@@ -62,6 +62,10 @@ This project keeps a changelog in the CHANGELOG.md file, the format is based on 
 - Limit the first line to 72 characters or less.
 - If the commit is about something that is unfinished, start the message with `wip :`
 
+## Versioning
+
+This project follows strictly [semantic versioning](https://semver.org/) for tags and version numbers.
+
 ## Branching model
 
 This project uses [this successful branching model](https://nvie.com/posts/a-successful-git-branching-model/).
