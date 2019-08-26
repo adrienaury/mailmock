@@ -247,10 +247,10 @@ func TestTransactionWrongSequence1(t *testing.T) {
 func TestTransactionWrongSequence2(t *testing.T) {
 	tr := smtpd.NewTransaction()
 
-	res, err := tr.Process(&MailCommand)
+	_, err := tr.Process(&MailCommand)
 	assert.NoError(t, err)
 
-	res, err = tr.Process(&MailCommand)
+	res, err := tr.Process(&MailCommand)
 	assert.NoError(t, err, "In progress transactions MUST NOT return an error after a well-formed MAIL command")
 	assert.NotNil(t, res, "In progress transactions MUST return a response to a well-formed MAIL command")
 	assert.Equal(t, smtpd.CodeBadSequence, res.Code, "In progress transactions MUST return response code 503 to a well-formed MAIL command")
@@ -264,10 +264,10 @@ func TestTransactionWrongSequence2(t *testing.T) {
 func TestTransactionMissingRecipient(t *testing.T) {
 	tr := smtpd.NewTransaction()
 
-	res, err := tr.Process(&MailCommand)
+	_, err := tr.Process(&MailCommand)
 	assert.NoError(t, err)
 
-	res, err = tr.Process(&DataCommand)
+	res, err := tr.Process(&DataCommand)
 	assert.NoError(t, err, "In progress transaction with no recipients MUST NOT return an error after a well-formed DATA command")
 	assert.NotNil(t, res, "In progress transaction with no recipients MUST return a response to a well-formed DATA command")
 	assert.Equal(t, smtpd.CodeBadSequence, res.Code, "In progress transaction with no recipients MUST return response code 503 to a well-formed DATA command")
@@ -294,16 +294,16 @@ func TestTransactionUnexpectedData(t *testing.T) {
 func TestTransactionUnexpectedCommand(t *testing.T) {
 	tr := smtpd.NewTransaction()
 
+	_, err := tr.Process(&MailCommand)
+	assert.NoError(t, err)
+
+	_, err = tr.Process(&RcptCommand)
+	assert.NoError(t, err)
+
+	_, err = tr.Process(&DataCommand)
+	assert.NoError(t, err)
+
 	res, err := tr.Process(&MailCommand)
-	assert.NoError(t, err)
-
-	res, err = tr.Process(&RcptCommand)
-	assert.NoError(t, err)
-
-	res, err = tr.Process(&DataCommand)
-	assert.NoError(t, err)
-
-	res, err = tr.Process(&MailCommand)
 	assert.Error(t, err, "Data transactions MUST return an error after a well-formed MAIL command")
 	assert.Nil(t, res, "Data transactions MUST NOT return a response after a well-formed MAIL command")
 	assert.Equal(t, smtpd.TSData, tr.State, "Data transactions MUST NOT mutate state after a well-formed MAIL command")
