@@ -15,6 +15,8 @@ var th smtpd.TransactionHandler = func(tr *smtpd.Transaction) {
 }
 
 func TestMain(m *testing.M) {
+	smtpd.SetReply(smtpd.CodeReady, "Service ready")
+	smtpd.SetReply(smtpd.CodeClosing, "Service closing transmission channel")
 	srv := smtpd.NewServer("mockmail", "localhost", "1024", &th, nil)
 	go srv.ListenAndServe(make(chan struct{}))
 	os.Exit(m.Run())
