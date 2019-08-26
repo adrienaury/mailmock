@@ -118,9 +118,11 @@ var replyText = map[Code]string{
 	CodeMailFromRcptToParam:     "",
 }
 
+var hostname string
+
 // SetReply sets reply text of given code.
 func SetReply(c Code, s string) {
-	replyText[c] = s
+	replyText[c] = strings.ReplaceAll(s, "<domain>", hostname)
 }
 
 func r(c Code) *Response {
@@ -128,12 +130,11 @@ func r(c Code) *Response {
 }
 
 func init() {
-	var hostname string
 	var err error
 	if hostname, err = os.Hostname(); err != nil {
 		hostname = "localhost"
 	}
 	for code, text := range replyText {
-		replyText[code] = strings.ReplaceAll(text, "<domain>", hostname)
+		SetReply(code, text)
 	}
 }
