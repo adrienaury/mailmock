@@ -130,7 +130,11 @@ func (s *Session) Serve(stop <-chan struct{}) {
 			s.logger.Error("Lost client connection, quitting", log.Fields{log.FieldError: err})
 			res = s.quit()
 		} else if errop, ok := err.(net.Error); ok && errop.Timeout() {
-			s.logger.Warn("Session timed out")
+			if s.mustStop {
+				s.logger.Warn("Session interrupted because server is shutting down")
+			} else {
+				s.logger.Warn("Session timed out")
+			}
 			s.conn.PrintfLine("%v", r(CodeNotAvailable))
 			return
 		} else if err != nil {
