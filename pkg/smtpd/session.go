@@ -172,7 +172,7 @@ func (s *Session) serveLoop(stop <-chan struct{}) {
 		}
 
 		if err := s.conn.PrintfLine("%v", res); err != nil {
-			s.logger.Error("Network error, failed to send response, quitting", log.Fields{log.FieldError: err, log.FieldResponse: r(CodeNotAvailable)})
+			s.logger.Error("Network error, failed to send response, quitting", log.Fields{log.FieldError: err, log.FieldResponse: res})
 			s.quit()
 			return
 		}
