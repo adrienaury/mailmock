@@ -8,7 +8,7 @@ VERSION ?= $(shell git describe --tags --exact-match 2>/dev/null || git symbolic
 COMMIT_HASH ?= $(shell git rev-parse --short HEAD 2>/dev/null)
 BUILD_DATE ?= $(shell date +%FT%T%z)
 BUILD_BY ?= $(shell git config user.email)
-LDFLAGS += -X main.version=${VERSION} -X main.commit=${COMMIT_HASH} -X main.date=${BUILD_DATE} -X main.builtBy=${BUILD_BY}
+LDFLAGS += -X main.version=${VERSION} -X main.commit=${COMMIT_HASH} -X main.buildDate=${BUILD_DATE} -X main.builtBy=${BUILD_BY}
 
 # Project variables
 DOCKER_IMAGE = adrienaury/mailmock

@@ -36,10 +36,10 @@ import (
 // Provisioned by ldflags
 // nolint: gochecknoglobals
 var (
-	version string
-	commit  string
-	build   string
-	builtBy string
+	version   string
+	commit    string
+	buildDate string
+	builtBy   string
 )
 
 var th smtpd.TransactionHandler = func(tr *smtpd.Transaction) {
@@ -81,12 +81,9 @@ func main() {
 		listenAddr = defaultListenAddr
 	}
 
-	hostname := "localhost"
-	hostname, _ = os.Hostname()
-
 	// sets the SMTP greeting banner
 	smtpd.SetReply(smtpd.CodeReady,
-		fmt.Sprintf("%v Mailmock %v Service ready - this is a testing SMTP server, it does not deliver e-mails", hostname, version))
+		fmt.Sprintf("<domain> Mailmock %v Service ready - this is a testing SMTP server, it does not deliver e-mails", version))
 
 	// logrus initialization
 	logrus.SetFormatter(&logrus.TextFormatter{})
@@ -96,6 +93,12 @@ func main() {
 	logger := log.NewLoggerAdapter(logur.New(logrus.StandardLogger()))
 	logger = logger.WithFields(log.Fields{
 		log.FieldApp: "mailmock",
+	})
+	logger.Debug("Build information", log.Fields{
+		log.FieldVersion:   version,
+		log.FieldCommit:    commit,
+		log.FieldBuildDate: buildDate,
+		log.FieldBuiltBy:   builtBy,
 	})
 
 	loggerSMTP := logger.WithFields(log.Fields{
