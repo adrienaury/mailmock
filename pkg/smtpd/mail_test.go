@@ -9,5 +9,5 @@ import (
 
 func TestMail(t *testing.T) {
 	mail := smtpd.Mail{}
-	assert.Equal(t, "MAIL FROM:\nRCPT TO:\n", mail.String(), "")
+	assert.Equal(t, "MAIL FROM:\nRCPT TO:\n", mail.String(), "Invalid mail string representation")
 }

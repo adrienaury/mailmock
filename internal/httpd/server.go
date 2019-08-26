@@ -15,41 +15,56 @@
 // You should have received a copy of the GNU General Public License
 // along with Mailmock.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package httpd exposes the REST API of Mailmock
+// Package httpd exposes the REST API of Mailmock.
 package httpd
 
 import (
-	"log"
+	"context"
 	"net"
 	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/adrienaury/mailmock/internal/log"
 )
 
 // Server is holding the HTTP server properties.
 type Server struct {
-	name string
-	host string
-	port string
+	name   string
+	host   string
+	port   string
+	logger log.Logger
 }
 
 // NewServer creates a HTTP server.
-func NewServer(name string, host string, port string) *Server {
-	return &Server{name, host, port}
+func NewServer(name string, host string, port string, logger log.Logger) *Server {
+	if logger == nil {
+		logger = log.DefaultLogger
+	}
+	l := logger.WithFields(log.Fields{
+		log.FieldServer: name,
+		log.FieldListen: net.JoinHostPort(host, port),
+	})
+	return &Server{name, host, port, l}
 }
 
 // ListenAndServe starts listening for clients connection and serves requests.
-func (srv *Server) ListenAndServe() {
-	router := Routes()
+func (srv *Server) ListenAndServe(stop <-chan struct{}) error {
+	router := srv.Routes()
 
-	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
-		log.Printf("%s %s\n", method, route) // Walk and print out all routes
-		return nil
+	s := http.Server{
+		Addr:    net.JoinHostPort(srv.host, srv.port),
+		Handler: router,
 	}
 
-	if err := chi.Walk(router, walkFunc); err != nil {
-		log.Panicf("Logging err: %s\n", err.Error()) // panic if there is an error
-	}
+	go func() {
+		<-stop // wait for stop signal
+		s.Shutdown(context.Background())
+	}()
 
-	log.Fatal(http.ListenAndServe(net.JoinHostPort(srv.host, srv.port), router))
+	srv.logger.Info("HTTP Server is listening")
+	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		srv.logger.Error("HTTP Server failed", log.Fields{log.FieldError: err})
+		return err
+	}
+	srv.logger.Info("HTTP Server is stopped")
+	return nil
 }

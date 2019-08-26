@@ -18,6 +18,7 @@
 package httpd
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -28,14 +29,15 @@ import (
 )
 
 // Routes returns a configured router for REST API serving.
-func Routes() *chi.Mux {
+func (srv *Server) Routes() *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(
 		render.SetContentType(render.ContentTypeJSON), // Set content-Type headers as application/json
-		middleware.Logger,          // Log API request calls
-		middleware.DefaultCompress, // Compress results, mostly gzipping assets and json
-		middleware.RedirectSlashes, // Redirect slashes to no slash URL versions
-		middleware.Recoverer,       // Recover from panics without crashing server
+		middleware.RequestID,                          // Creates a unique request ID
+		chilogger{srv.logger}.middleware,              // Log API request calls
+		middleware.DefaultCompress,                    // Compress results, mostly gzipping assets and json
+		middleware.RedirectSlashes,                    // Redirect slashes to no slash URL versions
+		middleware.Recoverer,                          // Recover from panics without crashing server
 	)
 
 	router.Route("/v1", func(r chi.Router) {
@@ -67,6 +69,48 @@ func getOne(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, obj) // A chi router helper for serializing and returning json
 }
 
+const maxLimit = 50
+
 func getAll(w http.ResponseWriter, r *http.Request) {
-	render.JSON(w, r, repository.All()) // A chi router helper for serializing and returning json
+	var from, limit int64
+	var err error
+
+	if froms, ok := r.URL.Query()["from"]; !ok || len(froms) < 1 {
+		from = 0
+	} else {
+		from, err = strconv.ParseInt(froms[0], 10, 0)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
+	if limits, ok := r.URL.Query()["limit"]; !ok || len(limits) < 1 {
+		limit = 20
+	} else {
+		limit, err = strconv.ParseInt(limits[0], 10, 0)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
+	if limit > maxLimit {
+		http.Error(w, fmt.Sprintf("Maximum allowed limit is %v", maxLimit), http.StatusBadRequest)
+		return
+	}
+
+	objs, all := repository.All(int(from), int(limit))
+	if objs == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	if !all {
+		render.Status(r, http.StatusPartialContent)
+	}
+	w.Header().Set("Content-Range", fmt.Sprintf("%v-%v/%v", from, from+limit, repository.Len()))
+	w.Header().Set("Accept-Range", fmt.Sprintf("%v %v", "mailmock", maxLimit))
+
+	render.JSON(w, r, objs) // A chi router helper for serializing and returning json
 }

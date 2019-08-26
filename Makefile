@@ -28,9 +28,11 @@ info: ## Prints build informations
 	@echo COMMIT_HASH=$(COMMIT_HASH)
 	@echo VERSION=$(VERSION)
 	@echo RELEASE=$(RELEASE)
+ifeq (${RELEASE}, 1)
 	@echo MAJOR=$(MAJOR)
 	@echo MINOR=$(MINOR)
 	@echo PATCH=$(PATCH)
+endif
 	@echo DOCKER_IMAGE=$(DOCKER_IMAGE)
 	@echo DOCKER_TAG=$(DOCKER_TAG)
 	@echo BUILD_BY=$(BUILD_BY)
@@ -43,16 +45,20 @@ clean: ## Clean builds
 mkdir:
 	mkdir -p ${BUILD_DIR}
 
+.PHONY: tidy
+tidy: ## Add missing and remove unused modules
+	GO111MODULE=on go mod tidy
+
 .PHONY: build-%
 build-%: mkdir
-	go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
+	GO111MODULE=on go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: build
 build: $(patsubst cmd/%,build-%,$(wildcard cmd/*)) ## Build all binaries
 
 .PHONY: test
 test: mkdir ## Run all tests with coverage
-	go test -coverprofile=${BUILD_DIR}/coverage.txt -covermode=atomic ./...
+	GO111MODULE=on go test -coverprofile=${BUILD_DIR}/coverage.txt -covermode=atomic ./...
 
 .PHONY: run-%
 run-%: build-%
@@ -63,7 +69,7 @@ run: $(patsubst cmd/%,run-%,$(wildcard cmd/*)) ## Build and execute a binary
 
 .PHONY: release-%
 release-%: mkdir
-	go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
+	GO111MODULE=on go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: release
 release: clean info $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
@@ -76,6 +82,10 @@ ifeq (${RELEASE}, 1)
 	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:${MAJOR}
 	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
 endif
+
+.PHONY: start
+start: docker ## Start a docker container with default parameters
+	docker run -ti --rm -p 1080:80 -p 1025:25 ${DOCKER_IMAGE}:${DOCKER_TAG}
 
 .PHONY: push
 push: docker ## Push docker image on DockerHub

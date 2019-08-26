@@ -36,13 +36,17 @@ package smtpd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
+// Code is an alias for the type uint16
+type Code uint16
+
 // Response holds a 3 digit code and a messsage.
 type Response struct {
-	Code int16
-	Msg  string
+	Code Code   `json:"code"`
+	Msg  string `json:"message"`
 }
 
 // IsError returns true if the response is an error.
@@ -57,4 +61,79 @@ func (e Response) IsSuccess() bool {
 
 func (e Response) String() string {
 	return fmt.Sprintf("%3d %s", e.Code, e.Msg)
+}
+
+// SMTP reply codes as defined by RFC 5321, 4.2.3
+const (
+	CodeStatusHelp              Code = 211 // System status, or system help reply
+	CodeHelp                    Code = 214 // Help message (Information on how to use the receiver or the meaning of a particular non-standard command; this reply is useful only to the human user)
+	CodeReady                   Code = 220 // <domain> Service ready
+	CodeClosing                 Code = 221 // <domain> Service closing transmission channel
+	CodeSuccess                 Code = 250 // Requested mail action okay, completed
+	CodeUserNotLocalTemp        Code = 251 // User not local; will forward to <forward-path>
+	CodeCannotVerify            Code = 252 // Cannot VRFY user, but will accept message and attempt delivery
+	CodeAskForData              Code = 354 // Start mail input; end with <CRLF>.<CRLF>
+	CodeNotAvailable            Code = 421 // <domain> Service not available, closing transmission channel
+	CodeMailboxUnavailableTemp  Code = 450 // Requested mail action not taken: mailbox unavailable (e.g., mailbox busy or temporarily blocked for policy reasons)
+	CodeAbort                   Code = 451 // Requested action aborted: local error in processing
+	CodeInsufficientStorageTemp Code = 452 // Requested action not taken: insufficient system storage
+	CodeUnableAccomodateParam   Code = 455 // Server unable to accommodate parameters
+	CodeCommandUnrecognized     Code = 500 // Syntax error, command unrecognized
+	CodeParameterSyntax         Code = 501 // Syntax error in parameters or arguments
+	CodeNotImplemented          Code = 502 // Command not implemented
+	CodeBadSequence             Code = 503 // Bad sequence of commands
+	CodeParameterNotImplemented Code = 504 // Command parameter not implemented
+	CodeMailboxUnavailablePerm  Code = 550 // Requested action not taken: mailbox unavailable (e.g., mailbox not found, no access, or command rejected for policy reasons)
+	CodeUserNotLocalPerm        Code = 551 // User not local; please try <forward-path>
+	CodeInsufficientStoragePerm Code = 552 // Requested mail action aborted: exceeded storage allocation
+	CodeMailboxNotAllowed       Code = 553 // Requested action not taken: mailbox name not allowed (e.g., mailbox syntax incorrect)
+	CodeTransactionFailed       Code = 554 // Transaction failed
+	CodeMailFromRcptToParam     Code = 555 // MAIL FROM/RCPT TO parameters not recognized or not implemented
+)
+
+var replyText = map[Code]string{
+	CodeStatusHelp:              "",
+	CodeHelp:                    "",
+	CodeReady:                   "<domain> Service ready",
+	CodeClosing:                 "<domain> Service closing transmission channel",
+	CodeSuccess:                 "OK",
+	CodeUserNotLocalTemp:        "",
+	CodeCannotVerify:            "",
+	CodeAskForData:              "Start mail input; end with <CRLF>.<CRLF>",
+	CodeNotAvailable:            "<domain> Service not available, closing transmission channel",
+	CodeMailboxUnavailableTemp:  "",
+	CodeAbort:                   "Requested action aborted: error in processing",
+	CodeInsufficientStorageTemp: "",
+	CodeUnableAccomodateParam:   "",
+	CodeCommandUnrecognized:     "Syntax error, command unrecognized",
+	CodeParameterSyntax:         "Syntax error in parameters or arguments",
+	CodeNotImplemented:          "Command not implemented",
+	CodeBadSequence:             "Bad sequence of commands",
+	CodeParameterNotImplemented: "",
+	CodeMailboxUnavailablePerm:  "",
+	CodeUserNotLocalPerm:        "",
+	CodeInsufficientStoragePerm: "",
+	CodeMailboxNotAllowed:       "",
+	CodeTransactionFailed:       "No valid recipients",
+	CodeMailFromRcptToParam:     "",
+}
+
+// SetReply sets reply text of given code.
+func SetReply(c Code, s string) {
+	replyText[c] = s
+}
+
+func r(c Code) *Response {
+	return &Response{c, replyText[c]}
+}
+
+func init() {
+	var hostname string
+	var err error
+	if hostname, err = os.Hostname(); err != nil {
+		hostname = "localhost"
+	}
+	for code, text := range replyText {
+		replyText[code] = strings.ReplaceAll(text, "<domain>", hostname)
+	}
 }

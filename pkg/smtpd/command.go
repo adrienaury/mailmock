@@ -71,7 +71,7 @@ func ParseCommand(input string) (*Command, *Response) {
 	name := strings.ToUpper(strings.TrimSpace(elmts[0]))
 	desc, ok := listOfValidCommands[name]
 	if !ok {
-		return nil, &Response{500, "Syntax error, command unrecognized"}
+		return nil, r(CodeCommandUnrecognized)
 	}
 
 	if desc.numberOfArgument != len(desc.argumentNames) {
@@ -81,11 +81,11 @@ func ParseCommand(input string) (*Command, *Response) {
 	elmts = elmts[1:]
 
 	if len(elmts) < desc.numberOfArgument {
-		return nil, &Response{501, "Syntax error in parameters or arguments"}
+		return nil, r(CodeParameterSyntax)
 	}
 
 	if len(elmts) > desc.numberOfArgument && desc.isStrict {
-		return nil, &Response{501, "Syntax error in parameters or arguments"}
+		return nil, r(CodeParameterSyntax)
 	}
 
 	command := &Command{FullCmd: input, Name: name, PositionalArgs: []string{}, NamedArgs: map[string]string{}}
@@ -98,19 +98,19 @@ func ParseCommand(input string) (*Command, *Response) {
 		argName := desc.argumentNames[argPos]
 		if argName != "" {
 			if strings.Count(arg, ":") != 1 {
-				return nil, &Response{501, "Syntax error in parameters or arguments"}
+				return nil, r(CodeParameterSyntax)
 			}
 			argSplit := strings.Split(arg, ":")
 			if strings.ToUpper(argSplit[0]) != argName {
-				return nil, &Response{501, "Syntax error in parameters or arguments"}
+				return nil, r(CodeParameterSyntax)
 			}
 			command.NamedArgs[argName] = strings.TrimSpace(argSplit[1])
 			if command.NamedArgs[argName] == "" {
-				return nil, &Response{501, "Syntax error in parameters or arguments"}
+				return nil, r(CodeParameterSyntax)
 			}
 		} else {
 			if arg == "" {
-				return nil, &Response{501, "Syntax error in parameters or arguments"}
+				return nil, r(CodeParameterSyntax)
 			}
 			command.PositionalArgs = append(command.PositionalArgs, strings.TrimSpace(arg))
 		}

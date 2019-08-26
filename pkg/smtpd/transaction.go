@@ -36,7 +36,6 @@ package smtpd
 
 import (
 	"fmt"
-	"strings"
 )
 
 // TransactionState is the state of a Transaction.
@@ -84,7 +83,7 @@ func (tr *Transaction) Data(data []string) (*Response, error) {
 		tr.History = append(tr.History, data...)
 		tr.Mail.Content = data
 		tr.State = TSCompleted
-		r := &Response{250, "OK"}
+		r := r(CodeSuccess)
 		tr.History = append(tr.History, ".")
 		tr.History = append(tr.History, r.String())
 		return r, nil
@@ -132,23 +131,23 @@ func (tr *Transaction) handleCommandInitiated(cmd *Command) (*Response, error) {
 	case "MAIL":
 		tr.Mail.Envelope.Sender = cmd.NamedArgs["FROM"]
 		tr.State = TSInProgress
-		return &Response{250, "OK"}, nil
+		return r(CodeSuccess), nil
 	}
-	return &Response{503, "Bad sequence of commands"}, nil
+	return r(CodeBadSequence), nil
 }
 
 func (tr *Transaction) handleCommandInProgress(cmd *Command) (*Response, error) {
 	switch cmd.Name {
 	case "RCPT":
 		tr.Mail.Envelope.Recipients = append(tr.Mail.Envelope.Recipients, cmd.NamedArgs["TO"])
-		return &Response{250, "OK"}, nil
+		return r(CodeSuccess), nil
 	case "DATA":
 		if len(tr.Mail.Envelope.Recipients) > 0 {
 			tr.State = TSData
-			return &Response{354, "Start mail input; end with <CRLF>.<CRLF>"}, nil
+			return r(CodeAskForData), nil
 		}
 	}
-	return &Response{503, "Bad sequence of commands"}, nil
+	return r(CodeBadSequence), nil
 }
 
 func (tr *Transaction) handleCommandCompleted(cmd *Command) (*Response, error) {
@@ -160,5 +159,5 @@ func (tr *Transaction) handleCommandAborted(cmd *Command) (*Response, error) {
 }
 
 func (tr Transaction) String() string {
-	return fmt.Sprintf("Transaction %v:\n%v", tr.State, strings.Join(tr.History, "\n"))
+	return fmt.Sprintf("Transaction %v [%p]", tr.State, &tr)
 }

@@ -21,10 +21,16 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/adrienaury/mailmock/internal/httpd"
+	"github.com/adrienaury/mailmock/internal/log"
 	"github.com/adrienaury/mailmock/internal/repository"
 	"github.com/adrienaury/mailmock/pkg/smtpd"
+	"github.com/goph/logur/adapters/logrusadapter"
+	"github.com/heptio/workgroup"
+	"github.com/sirupsen/logrus"
 )
 
 // Provisioned by ldflags
@@ -54,6 +60,7 @@ func main() {
 	fmt.Printf("%v - Copyright (C) 2019  Adrien Aury\n\n", version)
 	fmt.Println("This program is licensed under the terms of the GNU General Public License v3 (https://www.gnu.org/licenses/gpl-3.0.html)")
 	fmt.Println("Source code and documentation are available at https://github.com/adrienaury/mailmock")
+	fmt.Println()
 
 	defaultSMTPPort := "smtp"
 	defaultHTTPPort := "http"
@@ -74,11 +81,55 @@ func main() {
 		listenAddr = defaultListenAddr
 	}
 
-	// starts the SMTP server
-	smtpsrv := smtpd.NewServer("mailmock", listenAddr, smtpPort, &th)
-	go smtpsrv.ListenAndServe()
+	hostname := "localhost"
+	hostname, _ = os.Hostname()
 
-	httpsrv := httpd.NewServer("mailmock", listenAddr, httpPort)
-	httpsrv.ListenAndServe()
+	// sets the SMTP greeting banner
+	smtpd.SetReply(smtpd.CodeReady,
+		fmt.Sprintf("%v Mailmock %v Service ready - this is a testing SMTP server, it does not deliver e-mails", hostname, version))
 
+	// logrus initialization
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	logrus.SetOutput(os.Stdout)
+	logrus.SetLevel(logrus.InfoLevel)
+
+	logger := log.NewLoggerAdapter(logrusadapter.New(logrus.StandardLogger()))
+	logger = logger.WithFields(log.Fields{
+		log.FieldApp: "mailmock",
+	})
+
+	loggerSMTP := logger.WithFields(log.Fields{
+		log.FieldService: "smtp",
+	})
+
+	loggerHTTP := logger.WithFields(log.Fields{
+		log.FieldService: "http",
+	})
+
+	group := &workgroup.Group{}
+	group.Add(func(stop <-chan struct{}) error {
+		// interrupt/kill signals sent from terminal or host on shutdown
+		interrupt := make(chan os.Signal, 1)
+		signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
+		select {
+		case <-stop:
+			return fmt.Errorf("shutting down OS signal watcher on workgroup stop")
+		case i := <-interrupt:
+			logger.Info(fmt.Sprintf("Received OS signal %s; beginning shutdown...", i))
+			return nil
+		}
+	})
+	group.Add(func(stop <-chan struct{}) error {
+		smtpsrv := smtpd.NewServer("main", listenAddr, smtpPort, &th, loggerSMTP)
+		return smtpsrv.ListenAndServe(stop)
+	})
+	group.Add(func(stop <-chan struct{}) error {
+		httpsrv := httpd.NewServer("main", listenAddr, httpPort, loggerHTTP)
+		return httpsrv.ListenAndServe(stop)
+	})
+	err := group.Run()
+	if err != nil {
+		logger.Error("Program exited with error", log.Fields{log.FieldError: err})
+		os.Exit(1)
+	}
 }

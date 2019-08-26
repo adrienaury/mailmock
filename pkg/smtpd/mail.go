@@ -39,7 +39,7 @@ import (
 	"strings"
 )
 
-// Envelope contains the sender address (originator or return-path).
+// Envelope contains the sender address (originator or return-path) and the recipients address (or forward-paths).
 type Envelope struct {
 	Sender     string   `json:"sender"`
 	Recipients []string `json:"recipients"`

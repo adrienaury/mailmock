@@ -36,49 +36,98 @@
 package smtpd
 
 import (
-	"log"
 	"net"
 	"net/textproto"
+	"sync"
+	"time"
+
+	"github.com/adrienaury/mailmock/internal/log"
 )
 
 // Server is holding the SMTP server properties.
 type Server struct {
-	name string
-	host string
-	port string
-	th   *TransactionHandler
+	name      string
+	host      string
+	port      string
+	th        *TransactionHandler
+	logger    log.Logger
+	waitGroup *sync.WaitGroup
 }
 
 // NewServer creates a SMTP server.
-func NewServer(name string, host string, port string, th *TransactionHandler) *Server {
-	return &Server{name, host, port, th}
+func NewServer(name string, host string, port string, th *TransactionHandler, logger log.Logger) *Server {
+	if logger == nil {
+		logger = log.DefaultLogger
+	}
+	l := logger.WithFields(log.Fields{
+		log.FieldServer: name,
+		log.FieldListen: net.JoinHostPort(host, port),
+	})
+	srv := &Server{name, host, port, th, l, &sync.WaitGroup{}}
+	return srv
 }
 
 // ListenAndServe starts listening for clients connection and serves SMTP commands.
-func (srv *Server) ListenAndServe() {
-	ln, err := net.Listen("tcp", net.JoinHostPort(srv.host, srv.port))
-	if err != nil {
-		panic(err)
+func (srv *Server) ListenAndServe(stop <-chan struct{}) error {
+	defer srv.un(srv.trace("ListenAndServe"))
+	laddr, err := net.ResolveTCPAddr("tcp", net.JoinHostPort(srv.host, srv.port))
+	if nil != err {
+		srv.logger.Error("SMTP Server failed to start", log.Fields{log.FieldError: err})
+		return err
 	}
-	srv.serve(ln)
+	ln, err := net.ListenTCP("tcp", laddr)
+	if err != nil {
+		srv.logger.Error("SMTP Server failed to start", log.Fields{log.FieldError: err})
+		return err
+	}
+	srv.logger.Info("SMTP Server is listening")
+	srv.waitGroup.Add(1)
+	srv.serve(ln, stop)
+	srv.waitGroup.Wait()
+	srv.logger.Info("SMTP Server is stopped")
+	return nil
 }
 
-func (srv *Server) serve(ln net.Listener) {
+func (srv *Server) serve(ln *net.TCPListener, stop <-chan struct{}) {
+	defer srv.un(srv.trace("serve"))
 	defer ln.Close()
+	defer srv.waitGroup.Done()
 	for {
+		select {
+		case <-stop:
+			return
+		default:
+		}
+		ln.SetDeadline(time.Now().Add(1e9)) // 1 second
 		conn, err := ln.Accept()
 		if err != nil {
-			log.Printf("Error accepting connection: %s\n", err)
+			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
+				continue
+			}
+			srv.logger.Error("SMTP Server failed to accept connection", log.Fields{log.FieldError: err})
 			continue
 		}
-		go srv.handleConnection(conn)
+		srv.waitGroup.Add(1)
+		go srv.handleConnection(conn.(*net.TCPConn), stop)
 	}
 }
 
-func (srv *Server) handleConnection(conn net.Conn) {
+func (srv *Server) handleConnection(conn *net.TCPConn, stop <-chan struct{}) {
+	defer srv.un(srv.trace("handleConnection"))
 	tpc := textproto.NewConn(conn)
 	defer tpc.Close()
+	defer srv.waitGroup.Done()
 
-	s := NewSession(tpc, srv.th)
-	s.Serve()
+	s := NewSession(tpc, srv.th, srv.logger)
+	s.tcpConn = conn
+	s.Serve(stop)
+}
+
+func (srv *Server) trace(s string) string {
+	srv.logger.Trace("Entering function", log.Fields{"func": s})
+	return s
+}
+
+func (srv *Server) un(s string) {
+	srv.logger.Trace("Leaving function", log.Fields{"func": s})
 }
