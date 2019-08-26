@@ -88,12 +88,14 @@ func NewSession(c *textproto.Conn, th *TransactionHandler, logger log.Logger) *S
 func (s *Session) Serve(stop <-chan struct{}) {
 	if s.State == SSClosed {
 		s.logger.Warn("Cannot serve a closed session")
-		s.conn.PrintfLine("%v", r(CodeNotAvailable))
+		if err := s.conn.PrintfLine("%v", r(CodeNotAvailable)); err != nil {
+			s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(CodeNotAvailable)})
+		}
 		return
 	}
 
 	if err := s.conn.PrintfLine("%v", r(CodeReady)); err != nil {
-		s.logger.Error("Failed to send greeting message, quitting session", log.Fields{log.FieldError: err})
+		s.logger.Error("Failed to send greeting message, quitting session", log.Fields{log.FieldError: err, log.FieldResponse: r(CodeReady)})
 		s.quit()
 		return
 	}
@@ -109,7 +111,7 @@ func (s *Session) Serve(stop <-chan struct{}) {
 			s.logger.Warn("Server must stop, session will timeout in 30 seconds (at most)")
 			<-time.After(30 * time.Second)
 			if s.tcpConn != nil {
-				s.tcpConn.SetReadDeadline(time.Now())
+				_ = s.tcpConn.SetReadDeadline(time.Now())
 			}
 		case <-shutdown:
 		}
@@ -127,7 +129,9 @@ func (s *Session) serveLoop(stop <-chan struct{}) {
 		if s.tcpConn != nil {
 			// SMTP server SHOULD have a timeout of at least 5 minutes while it
 			// is awaiting the next command from the sender (RFC 5321 4.5.3.2.7.)
-			s.tcpConn.SetReadDeadline(time.Now().Add(time.Minute * 5))
+			if err := s.tcpConn.SetReadDeadline(time.Now().Add(time.Minute * 5)); err != nil {
+				s.logger.Error("SetDeadline on SMTP session failed", log.Fields{log.FieldError: err})
+			}
 		}
 
 		if input, err := s.conn.ReadLine(); err == io.EOF || err == io.ErrClosedPipe {
@@ -139,7 +143,9 @@ func (s *Session) serveLoop(stop <-chan struct{}) {
 			} else {
 				s.logger.Warn("Session timed out")
 			}
-			s.conn.PrintfLine("%v", r(CodeNotAvailable))
+			if err := s.conn.PrintfLine("%v", r(CodeNotAvailable)); err != nil {
+				s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(CodeNotAvailable)})
+			}
 			return
 		} else if err != nil {
 			s.logger.Error("Network error, requested action cannot be processed", log.Fields{log.FieldError: err})
@@ -158,13 +164,15 @@ func (s *Session) serveLoop(stop <-chan struct{}) {
 		case <-stop:
 			// We need to shutdown
 			s.logger.Warn("Session interrupted because server is shutting down")
-			s.conn.PrintfLine("%v", r(CodeNotAvailable))
+			if err := s.conn.PrintfLine("%v", r(CodeNotAvailable)); err != nil {
+				s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(CodeNotAvailable)})
+			}
 			return
 		default:
 		}
 
 		if err := s.conn.PrintfLine("%v", res); err != nil {
-			s.logger.Error("Network error, failed to send response, quitting", log.Fields{log.FieldError: err})
+			s.logger.Error("Network error, failed to send response, quitting", log.Fields{log.FieldError: err, log.FieldResponse: r(CodeNotAvailable)})
 			s.quit()
 			return
 		}
@@ -246,7 +254,10 @@ func (s *Session) data(cmd *Command) *Response {
 		return r(CodeAbort)
 	}
 
-	s.conn.PrintfLine("%v", res)
+	if err = s.conn.PrintfLine("%v", res); err != nil {
+		s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: res})
+		return r(CodeAbort)
+	}
 	data, err := s.conn.ReadDotLines()
 	if err != nil {
 		return r(CodeAbort)
@@ -286,7 +297,7 @@ func (s *Session) reset() *Response {
 
 func (s *Session) quit() *Response {
 	s.State = SSClosed
-	s.Tr.Abort()
+	_ = s.Tr.Abort()
 	return r(CodeClosing)
 }
 

@@ -98,7 +98,10 @@ func (srv *Server) serve(ln *net.TCPListener, stop <-chan struct{}) {
 			return
 		default:
 		}
-		ln.SetDeadline(time.Now().Add(1e9)) // 1 second
+		err := ln.SetDeadline(time.Now().Add(1e9)) // 1 second
+		if err != nil {
+			srv.logger.Error("SetDeadline on accept connection failed", log.Fields{log.FieldError: err})
+		}
 		conn, err := ln.Accept()
 		if err != nil {
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {

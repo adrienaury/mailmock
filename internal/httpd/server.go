@@ -62,7 +62,12 @@ func (srv *Server) ListenAndServe(stop <-chan struct{}) error {
 
 	go func() {
 		<-stop // wait for stop signal
-		s.Shutdown(context.Background())
+		if err := s.Shutdown(context.Background()); err != nil {
+			srv.logger.Warn("Failed to shutdown HTTP server", log.Fields{log.FieldError: err})
+			if err = s.Close(); err != nil {
+				srv.logger.Warn("Failed to close HTTP server", log.Fields{log.FieldError: err})
+			}
+		}
 	}()
 
 	srv.logger.Info("HTTP Server is listening")
