@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned for 0.2.1
 
 - Fix build date variable name
+- HTTP Server read and write timeouts
 
 ### Planned for 0.3.0
 
@@ -17,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HELP command
 - Configurable
 - Refactor Session to use TCPConn
+- SMTP relay mode
 
 ### Planned for 1.0.0
 
@@ -36,7 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gracefull restarts with github.com/cloudflare/tableflip
 - Live reloading of configuration
 - Extend API with search service
-- Possibility to enable SMTP relay mode
 
 ## [0.2.0] - 2019-08-26
 
