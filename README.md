@@ -73,8 +73,8 @@ address: localhost
 - config.json
 ```json
 {
-    "logLevel": "warn"
-    "httpPort": "http"
+    "logLevel": "warn",
+    "httpPort": "http",
     "smtpPort": "smtp"
 }
 ```
