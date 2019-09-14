@@ -57,7 +57,7 @@ func testKo(t *testing.T, input string, code smtpd.Code, msg string) {
 	assert.Nil(t, cmd, "Parsing an invalid command MUST return nil")
 	assert.NotNil(t, res, "Parsing an invalid command MUST return a non nil error response")
 	assert.Equal(t, code, res.Code, "Response code is not valid")
-	assert.Equal(t, msg, res.Msg, "Response message is not valid")
+	assert.Equal(t, []string{msg}, res.Msg, "Response message is not valid")
 }
 
 func TestCommandNominal(t *testing.T) {

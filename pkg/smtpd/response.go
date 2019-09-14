@@ -45,8 +45,8 @@ type Code uint16
 
 // Response holds a 3 digit code and a messsage.
 type Response struct {
-	Code Code   `json:"code"`
-	Msg  string `json:"message"`
+	Code Code     `json:"code"`
+	Msg  []string `json:"message"`
 }
 
 // IsError returns true if the response is an error.
@@ -60,7 +60,15 @@ func (e Response) IsSuccess() bool {
 }
 
 func (e Response) String() string {
-	return fmt.Sprintf("%3d %s", e.Code, e.Msg)
+	var sb strings.Builder
+	for i, msg := range e.Msg {
+		if i == len(e.Msg)-1 {
+			sb.WriteString(fmt.Sprintf("%3d %s", e.Code, msg))
+		} else {
+			sb.WriteString(fmt.Sprintf("%3d-%s\r\n", e.Code, msg))
+		}
+	}
+	return sb.String()
 }
 
 // Resp is an alias for the type uint16
@@ -113,27 +121,30 @@ const (
 
 // Responses returned by the SMTP server
 var Responses = map[Resp]Response{
-	Ready:                 Response{CodeReady, "<domain> Service ready"},
-	Closing:               Response{CodeClosing, "<domain> Service closing transmission channel"},
-	Success:               Response{CodeSuccess, "OK"},
-	Data:                  Response{CodeAskForData, "Start mail input; end with <CRLF>.<CRLF>"},
-	NotAvailable:          Response{CodeNotAvailable, "<domain> Service not available, closing transmission channel"},
-	ShuttingDown:          Response{CodeNotAvailable, "<domain> Service shutting down and closing transmission channel"},
-	SessionTimeout:        Response{CodeNotAvailable, "Your session timed out due to inactivity"},
-	Abort:                 Response{CodeAbort, "Requested action aborted: error in processing"},
-	CommandUnrecognized:   Response{CodeCommandUnrecognized, "Syntax error, command unrecognized"},
-	ParameterSyntax:       Response{CodeParameterSyntax, "Syntax error in parameters or arguments"},
-	CommandNotImplemented: Response{CodeNotImplemented, "Command not implemented"},
-	BadSequence:           Response{CodeBadSequence, "Bad sequence of commands"},
-	NoValidRecipients:     Response{CodeTransactionFailed, "No valid recipients"},
+	Ready:                 Response{CodeReady, []string{"<domain> Service ready"}},
+	Closing:               Response{CodeClosing, []string{"<domain> Service closing transmission channel"}},
+	Success:               Response{CodeSuccess, []string{"OK"}},
+	Data:                  Response{CodeAskForData, []string{"Start mail input; end with <CRLF>.<CRLF>"}},
+	NotAvailable:          Response{CodeNotAvailable, []string{"<domain> Service not available, closing transmission channel"}},
+	ShuttingDown:          Response{CodeNotAvailable, []string{"<domain> Service shutting down and closing transmission channel"}},
+	SessionTimeout:        Response{CodeNotAvailable, []string{"Your session timed out due to inactivity"}},
+	Abort:                 Response{CodeAbort, []string{"Requested action aborted: error in processing"}},
+	CommandUnrecognized:   Response{CodeCommandUnrecognized, []string{"Syntax error, command unrecognized"}},
+	ParameterSyntax:       Response{CodeParameterSyntax, []string{"Syntax error in parameters or arguments"}},
+	CommandNotImplemented: Response{CodeNotImplemented, []string{"Command not implemented"}},
+	BadSequence:           Response{CodeBadSequence, []string{"Bad sequence of commands"}},
+	NoValidRecipients:     Response{CodeTransactionFailed, []string{"No valid recipients"}},
 }
 
 var hostname string
 
 // SetReply set reply text of given code.
-func SetReply(r Resp, s string) {
+func SetReply(r Resp, s ...string) {
 	response := Responses[r]
-	response.Msg = strings.ReplaceAll(s, "<domain>", hostname)
+	response.Msg = s
+	for i, msg := range response.Msg {
+		response.Msg[i] = strings.ReplaceAll(msg, "<domain>", hostname)
+	}
 	Responses[r] = response
 }
 
@@ -148,6 +159,6 @@ func init() {
 		hostname = "localhost"
 	}
 	for code, text := range Responses {
-		SetReply(code, text.Msg)
+		SetReply(code, text.Msg...)
 	}
 }
