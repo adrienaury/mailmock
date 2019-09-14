@@ -19,6 +19,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -30,6 +31,8 @@ import (
 	"github.com/adrienaury/mailmock/pkg/smtpd"
 	"github.com/heptio/workgroup"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	logur "logur.dev/adapter/logrus"
 )
 
@@ -62,24 +65,49 @@ func main() {
 	fmt.Println("Source code and documentation are available at https://github.com/adrienaury/mailmock")
 	fmt.Println()
 
-	defaultSMTPPort := "smtp"
-	defaultHTTPPort := "http"
-	defaultListenAddr := ""
+	var cfgFile string
 
-	smtpPort := os.Getenv("MAILMOCK_SMTP_PORT")
-	if smtpPort == "" {
-		smtpPort = defaultSMTPPort
+	flag.String("httpPort", "http", "HTTP Port")
+	flag.String("smtpPort", "smtp", "SMTP Port")
+	flag.String("address", "", "Listening address")
+	flag.StringVar(&cfgFile, "config", "", "Configuration file")
+
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.Parse()
+
+	viper.SetEnvPrefix("mailmock") // will be uppercased automatically
+
+	viper.BindEnv("httpPort")
+	viper.BindEnv("smtpPort")
+	viper.BindEnv("address")
+
+	viper.SetDefault("httpPort", "http")
+	viper.SetDefault("smtpPort", "smtp")
+	viper.SetDefault("address", "")
+
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+		viper.SetConfigName("config")          // name of config file (without extension)
+		viper.AddConfigPath("/etc/mailmock/")  // path to look for the config file in
+		viper.AddConfigPath("$HOME/.mailmock") // call multiple times to add many search paths
+		viper.AddConfigPath(".")               // optionally look for config in the working directory
 	}
 
-	httpPort := os.Getenv("MAILMOCK_HTTP_PORT")
-	if httpPort == "" {
-		httpPort = defaultHTTPPort
+	viper.BindPFlags(pflag.CommandLine)
+
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// Config file not found; ignore error
+		} else {
+			// Config file was found but another error was produced
+			panic(fmt.Errorf("failed to read config file: %s", err))
+		}
 	}
 
-	listenAddr := os.Getenv("MAILMOCK_LISTEN_ADDR")
-	if listenAddr == "" {
-		listenAddr = defaultListenAddr
-	}
+	smtpPort := viper.GetString("smtpPort")
+	httpPort := viper.GetString("httpPort")
+	listenAddr := viper.GetString("address")
 
 	// sets the SMTP greeting banner
 	smtpd.SetReply(smtpd.Ready,
