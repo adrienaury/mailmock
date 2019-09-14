@@ -70,6 +70,7 @@ func main() {
 	flag.String("httpPort", "http", "HTTP Port")
 	flag.String("smtpPort", "smtp", "SMTP Port")
 	flag.String("address", "", "Listening address")
+	flag.String("logLevel", "info", "Log level (trace, debug, info, warn, error)")
 	flag.StringVar(&cfgFile, "config", "", "Configuration file")
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -80,10 +81,12 @@ func main() {
 	viper.BindEnv("httpPort")
 	viper.BindEnv("smtpPort")
 	viper.BindEnv("address")
+	viper.BindEnv("logLevel")
 
 	viper.SetDefault("httpPort", "http")
 	viper.SetDefault("smtpPort", "smtp")
 	viper.SetDefault("address", "")
+	viper.SetDefault("logLevel", "info")
 
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
@@ -108,6 +111,10 @@ func main() {
 	smtpPort := viper.GetString("smtpPort")
 	httpPort := viper.GetString("httpPort")
 	listenAddr := viper.GetString("address")
+	logLevel, err := logrus.ParseLevel(viper.GetString("logLevel"))
+	if err != nil {
+		panic(err)
+	}
 
 	// sets the SMTP greeting banner
 	smtpd.SetReply(smtpd.Ready,
@@ -116,7 +123,7 @@ func main() {
 	// logrus initialization
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	logrus.SetOutput(os.Stdout)
-	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetLevel(logLevel)
 
 	logger := log.NewLoggerAdapter(logur.New(logrus.StandardLogger()))
 	logger = logger.WithFields(log.Fields{
@@ -158,7 +165,7 @@ func main() {
 		httpsrv := httpd.NewServer("main", listenAddr, httpPort, loggerHTTP)
 		return httpsrv.ListenAndServe(stop)
 	})
-	err := group.Run()
+	err = group.Run()
 	if err != nil {
 		logger.Error("Program exited with error", log.Fields{log.FieldError: err})
 		os.Exit(1)
