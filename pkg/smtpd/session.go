@@ -88,14 +88,14 @@ func NewSession(c *textproto.Conn, th *TransactionHandler, logger log.Logger) *S
 func (s *Session) Serve(stop <-chan struct{}) {
 	if s.State == SSClosed {
 		s.logger.Warn("Cannot serve a closed session")
-		if err := s.conn.PrintfLine("%v", r(CodeNotAvailable)); err != nil {
-			s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(CodeNotAvailable)})
+		if err := s.conn.PrintfLine("%v", r(NotAvailable)); err != nil {
+			s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(NotAvailable)})
 		}
 		return
 	}
 
-	if err := s.conn.PrintfLine("%v", r(CodeReady)); err != nil {
-		s.logger.Error("Failed to send greeting message, quitting session", log.Fields{log.FieldError: err, log.FieldResponse: r(CodeReady)})
+	if err := s.conn.PrintfLine("%v", r(Ready)); err != nil {
+		s.logger.Error("Failed to send greeting message, quitting session", log.Fields{log.FieldError: err, log.FieldResponse: r(Ready)})
 		s.quit()
 		return
 	}
@@ -143,13 +143,13 @@ func (s *Session) serveLoop(stop <-chan struct{}) {
 			} else {
 				s.logger.Warn("Session timed out")
 			}
-			if err := s.conn.PrintfLine("%v", r(CodeNotAvailable)); err != nil {
-				s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(CodeNotAvailable)})
+			if err := s.conn.PrintfLine("%v", r(SessionTimeout)); err != nil {
+				s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(SessionTimeout)})
 			}
 			return
 		} else if err != nil {
 			s.logger.Error("Network error, requested action cannot be processed", log.Fields{log.FieldError: err})
-			res = r(CodeAbort)
+			res = r(Abort)
 		} else {
 			s.logger.Debug("Received command", log.Fields{log.FieldCommand: input})
 			res = s.receive(input)
@@ -164,8 +164,8 @@ func (s *Session) serveLoop(stop <-chan struct{}) {
 		case <-stop:
 			// We need to shutdown
 			s.logger.Warn("Session interrupted because server is shutting down")
-			if err := s.conn.PrintfLine("%v", r(CodeNotAvailable)); err != nil {
-				s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(CodeNotAvailable)})
+			if err := s.conn.PrintfLine("%v", r(ShuttingDown)); err != nil {
+				s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(ShuttingDown)})
 			}
 			return
 		default:
@@ -213,18 +213,18 @@ func (s *Session) receive(input string) (res *Response) {
 func (s *Session) hello(client string) *Response {
 	s.Client = client
 	s.State = SSReady
-	return r(CodeSuccess)
+	return r(Success)
 }
 
 func (s *Session) mail(cmd *Command) *Response {
 	if s.State != SSReady {
-		return r(CodeBadSequence)
+		return r(BadSequence)
 	}
 	s.Tr = NewTransaction()
 	s.logger.Debug("Started transaction")
 	res, err := s.Tr.Process(cmd)
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 	s.State = SSBusy
 	return res
@@ -232,40 +232,40 @@ func (s *Session) mail(cmd *Command) *Response {
 
 func (s *Session) rcpt(cmd *Command) *Response {
 	if s.State != SSBusy {
-		return r(CodeBadSequence)
+		return r(BadSequence)
 	}
 	res, err := s.Tr.Process(cmd)
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 	return res
 }
 
 func (s *Session) data(cmd *Command) *Response {
 	if s.State != SSBusy {
-		return r(CodeBadSequence)
+		return r(BadSequence)
 	}
 	if len(s.Tr.Mail.Envelope.Recipients) == 0 {
-		return r(CodeTransactionFailed)
+		return r(NoValidRecipients)
 	}
 
 	res, err := s.Tr.Process(cmd)
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 
 	if err = s.conn.PrintfLine("%v", res); err != nil {
 		s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: res})
-		return r(CodeAbort)
+		return r(Abort)
 	}
 	data, err := s.conn.ReadDotLines()
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 
 	res, err = s.Tr.Data(data)
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 
 	s.State = SSReady
@@ -273,17 +273,17 @@ func (s *Session) data(cmd *Command) *Response {
 }
 
 func (s *Session) verify(address string) *Response {
-	return r(CodeNotImplemented)
+	return r(CommandNotImplemented)
 }
 
 func (s *Session) noop() *Response {
-	return r(CodeSuccess)
+	return r(Success)
 }
 
 func (s *Session) reset() *Response {
 	err := s.Tr.Abort()
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 
 	if s.Client != "" {
@@ -292,13 +292,13 @@ func (s *Session) reset() *Response {
 		s.State = SSInitiated
 	}
 
-	return r(CodeSuccess)
+	return r(Success)
 }
 
 func (s *Session) quit() *Response {
 	s.State = SSClosed
 	_ = s.Tr.Abort()
-	return r(CodeClosing)
+	return r(Closing)
 }
 
 func (s *Session) handleTransaction() {

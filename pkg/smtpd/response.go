@@ -63,6 +63,26 @@ func (e Response) String() string {
 	return fmt.Sprintf("%3d %s", e.Code, e.Msg)
 }
 
+// Resp is an alias for the type uint16
+type Resp uint16
+
+// Responses
+const (
+	Ready                 Resp = iota // First response
+	Closing                           // Service closing
+	Success                           // Requested action completed
+	Abort                             // Requested action aborted
+	Data                              // Ask for data input
+	NotAvailable                      // Service is not available
+	ShuttingDown                      // Service is shutting down
+	SessionTimeout                    // Session timeout
+	CommandUnrecognized               // Syntax error, command unrecognized
+	ParameterSyntax                   // Syntax error in parameters or arguments
+	CommandNotImplemented             // Command not implemented
+	BadSequence                       // Bad sequence of commands
+	NoValidRecipients                 // Transaction failed : no valid recipients
+)
+
 // SMTP reply codes as defined by RFC 5321, 4.2.3
 const (
 	CodeStatusHelp              Code = 211 // System status, or system help reply
@@ -91,42 +111,35 @@ const (
 	CodeMailFromRcptToParam     Code = 555 // MAIL FROM/RCPT TO parameters not recognized or not implemented
 )
 
-var replyText = map[Code]string{
-	CodeStatusHelp:              "",
-	CodeHelp:                    "",
-	CodeReady:                   "<domain> Service ready",
-	CodeClosing:                 "<domain> Service closing transmission channel",
-	CodeSuccess:                 "OK",
-	CodeUserNotLocalTemp:        "",
-	CodeCannotVerify:            "",
-	CodeAskForData:              "Start mail input; end with <CRLF>.<CRLF>",
-	CodeNotAvailable:            "<domain> Service not available, closing transmission channel",
-	CodeMailboxUnavailableTemp:  "",
-	CodeAbort:                   "Requested action aborted: error in processing",
-	CodeInsufficientStorageTemp: "",
-	CodeUnableAccomodateParam:   "",
-	CodeCommandUnrecognized:     "Syntax error, command unrecognized",
-	CodeParameterSyntax:         "Syntax error in parameters or arguments",
-	CodeNotImplemented:          "Command not implemented",
-	CodeBadSequence:             "Bad sequence of commands",
-	CodeParameterNotImplemented: "",
-	CodeMailboxUnavailablePerm:  "",
-	CodeUserNotLocalPerm:        "",
-	CodeInsufficientStoragePerm: "",
-	CodeMailboxNotAllowed:       "",
-	CodeTransactionFailed:       "No valid recipients",
-	CodeMailFromRcptToParam:     "",
+// Responses returned by the SMTP server
+var Responses = map[Resp]Response{
+	Ready:                 Response{CodeReady, "<domain> Service ready"},
+	Closing:               Response{CodeClosing, "<domain> Service closing transmission channel"},
+	Success:               Response{CodeSuccess, "OK"},
+	Data:                  Response{CodeAskForData, "Start mail input; end with <CRLF>.<CRLF>"},
+	NotAvailable:          Response{CodeNotAvailable, "<domain> Service not available, closing transmission channel"},
+	ShuttingDown:          Response{CodeNotAvailable, "<domain> Service shutting down and closing transmission channel"},
+	SessionTimeout:        Response{CodeNotAvailable, "Your session timed out due to inactivity"},
+	Abort:                 Response{CodeAbort, "Requested action aborted: error in processing"},
+	CommandUnrecognized:   Response{CodeCommandUnrecognized, "Syntax error, command unrecognized"},
+	ParameterSyntax:       Response{CodeParameterSyntax, "Syntax error in parameters or arguments"},
+	CommandNotImplemented: Response{CodeNotImplemented, "Command not implemented"},
+	BadSequence:           Response{CodeBadSequence, "Bad sequence of commands"},
+	NoValidRecipients:     Response{CodeTransactionFailed, "No valid recipients"},
 }
 
 var hostname string
 
-// SetReply sets reply text of given code.
-func SetReply(c Code, s string) {
-	replyText[c] = strings.ReplaceAll(s, "<domain>", hostname)
+// SetReply set reply text of given code.
+func SetReply(r Resp, s string) {
+	response := Responses[r]
+	response.Msg = strings.ReplaceAll(s, "<domain>", hostname)
+	Responses[r] = response
 }
 
-func r(c Code) *Response {
-	return &Response{c, replyText[c]}
+func r(r Resp) *Response {
+	response := Responses[r]
+	return &response
 }
 
 func init() {
@@ -134,7 +147,7 @@ func init() {
 	if hostname, err = os.Hostname(); err != nil {
 		hostname = "localhost"
 	}
-	for code, text := range replyText {
-		SetReply(code, text)
+	for code, text := range Responses {
+		SetReply(code, text.Msg)
 	}
 }

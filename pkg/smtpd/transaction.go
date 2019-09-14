@@ -83,7 +83,7 @@ func (tr *Transaction) Data(data []string) (*Response, error) {
 		tr.History = append(tr.History, data...)
 		tr.Mail.Content = data
 		tr.State = TSCompleted
-		r := r(CodeSuccess)
+		r := r(Success)
 		tr.History = append(tr.History, ".")
 		tr.History = append(tr.History, r.String())
 		return r, nil
@@ -131,23 +131,23 @@ func (tr *Transaction) handleCommandInitiated(cmd *Command) (*Response, error) {
 	case "MAIL":
 		tr.Mail.Envelope.Sender = cmd.NamedArgs["FROM"]
 		tr.State = TSInProgress
-		return r(CodeSuccess), nil
+		return r(Success), nil
 	}
-	return r(CodeBadSequence), nil
+	return r(BadSequence), nil
 }
 
 func (tr *Transaction) handleCommandInProgress(cmd *Command) (*Response, error) {
 	switch cmd.Name {
 	case "RCPT":
 		tr.Mail.Envelope.Recipients = append(tr.Mail.Envelope.Recipients, cmd.NamedArgs["TO"])
-		return r(CodeSuccess), nil
+		return r(Success), nil
 	case "DATA":
 		if len(tr.Mail.Envelope.Recipients) > 0 {
 			tr.State = TSData
-			return r(CodeAskForData), nil
+			return r(Data), nil
 		}
 	}
-	return r(CodeBadSequence), nil
+	return r(BadSequence), nil
 }
 
 func (tr *Transaction) handleCommandCompleted(cmd *Command) (*Response, error) {

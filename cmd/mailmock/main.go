@@ -82,7 +82,7 @@ func main() {
 	}
 
 	// sets the SMTP greeting banner
-	smtpd.SetReply(smtpd.CodeReady,
+	smtpd.SetReply(smtpd.Ready,
 		fmt.Sprintf("<domain> Mailmock %v Service ready - this is a testing SMTP server, it does not deliver e-mails", version))
 
 	// logrus initialization
