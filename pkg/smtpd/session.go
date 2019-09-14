@@ -204,6 +204,8 @@ func (s *Session) receive(input string) (res *Response) {
 		res = s.quit()
 	case "VRFY":
 		res = s.verify(cmd.PositionalArgs[0])
+	case "HELP":
+		res = s.help(cmd.PositionalArgs)
 	default:
 		s.logger.Error("Coding error, this should not happen")
 	}
@@ -299,6 +301,10 @@ func (s *Session) quit() *Response {
 	s.State = SSClosed
 	_ = s.Tr.Abort()
 	return r(Closing)
+}
+
+func (s *Session) help([]string) *Response {
+	return r(Help)
 }
 
 func (s *Session) handleTransaction() {

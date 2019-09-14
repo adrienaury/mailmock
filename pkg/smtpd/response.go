@@ -89,11 +89,14 @@ const (
 	CommandNotImplemented             // Command not implemented
 	BadSequence                       // Bad sequence of commands
 	NoValidRecipients                 // Transaction failed : no valid recipients
+	Help                              // Help response
+	Status                            // Server status
+	Misconfiguration                  // Unable to reply because of misconfiguration
 )
 
 // SMTP reply codes as defined by RFC 5321, 4.2.3
 const (
-	CodeStatusHelp              Code = 211 // System status, or system help reply
+	CodeStatus                  Code = 211 // System status, or system help reply
 	CodeHelp                    Code = 214 // Help message (Information on how to use the receiver or the meaning of a particular non-standard command; this reply is useful only to the human user)
 	CodeReady                   Code = 220 // <domain> Service ready
 	CodeClosing                 Code = 221 // <domain> Service closing transmission channel
@@ -134,22 +137,30 @@ var Responses = map[Resp]Response{
 	CommandNotImplemented: Response{CodeNotImplemented, []string{"Command not implemented"}},
 	BadSequence:           Response{CodeBadSequence, []string{"Bad sequence of commands"}},
 	NoValidRecipients:     Response{CodeTransactionFailed, []string{"No valid recipients"}},
+	Misconfiguration:      Response{CodeTransactionFailed, []string{"Server is unable to reply to the requested action"}},
+	Help:                  Response{CodeHelp, []string{""}},
+	Status:                Response{CodeStatus, []string{""}},
 }
 
 var hostname string
 
 // SetReply set reply text of given code.
-func SetReply(r Resp, s ...string) {
-	response := Responses[r]
-	response.Msg = s
+func SetReply(resp Resp, s ...string) {
+	response := r(resp)
+	if len(s) > 0 && s[0] != "" {
+		response.Msg = s
+	}
 	for i, msg := range response.Msg {
 		response.Msg[i] = strings.ReplaceAll(msg, "<domain>", hostname)
 	}
-	Responses[r] = response
+	Responses[resp] = *response
 }
 
 func r(r Resp) *Response {
-	response := Responses[r]
+	response, ok := Responses[r]
+	if !ok {
+		response = Responses[Misconfiguration]
+	}
 	return &response
 }
 

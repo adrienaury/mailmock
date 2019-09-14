@@ -120,6 +120,9 @@ func main() {
 	smtpd.SetReply(smtpd.Ready,
 		fmt.Sprintf("<domain> Mailmock %v Service ready", version),
 		"This is a testing SMTP server, it does not deliver e-mails")
+	smtpd.SetReply(smtpd.Help,
+		"This is a testing SMTP server, it does not deliver e-mails",
+		"Visit https://github.com/adrienaury/mailmock for more information")
 
 	// logrus initialization
 	logrus.SetFormatter(&logrus.TextFormatter{})
