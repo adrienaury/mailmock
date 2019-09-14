@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned for 0.2.1
+
+- Fix build date variable name
+
 ### Planned for 0.3.0
 
 - SMTP multilines responses
