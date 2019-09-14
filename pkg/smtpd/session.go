@@ -63,6 +63,7 @@ type Session struct {
 	State    SessionState `json:"state"`
 	Client   string       `json:"client"`
 	Tr       *Transaction `json:"transaction"`
+	Extended bool
 	conn     *textproto.Conn
 	th       *TransactionHandler
 	logger   log.Logger
@@ -187,9 +188,9 @@ func (s *Session) receive(input string) (res *Response) {
 	}
 	switch cmd.Name {
 	case "HELO":
-		res = s.hello(cmd.PositionalArgs[0])
+		res = s.hello(cmd.PositionalArgs[0], false)
 	case "EHLO":
-		res = s.hello(cmd.PositionalArgs[0])
+		res = s.hello(cmd.PositionalArgs[0], true)
 	case "MAIL":
 		res = s.mail(cmd)
 	case "RCPT":
@@ -212,9 +213,13 @@ func (s *Session) receive(input string) (res *Response) {
 	return res
 }
 
-func (s *Session) hello(client string) *Response {
+func (s *Session) hello(client string, extended bool) *Response {
 	s.Client = client
 	s.State = SSReady
+	if extended {
+		s.Extended = true
+		return r(Extensions)
+	}
 	return r(Success)
 }
 
@@ -304,6 +309,9 @@ func (s *Session) quit() *Response {
 }
 
 func (s *Session) help([]string) *Response {
+	if !s.Extended {
+		return r(CommandUnrecognized)
+	}
 	return r(Help)
 }
 

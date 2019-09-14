@@ -92,6 +92,7 @@ const (
 	Help                              // Help response
 	Status                            // Server status
 	Misconfiguration                  // Unable to reply because of misconfiguration
+	Extensions                        // Reply to EHLO with supported extensions
 )
 
 // SMTP reply codes as defined by RFC 5321, 4.2.3
@@ -140,6 +141,7 @@ var Responses = map[Resp]Response{
 	Misconfiguration:      Response{CodeTransactionFailed, []string{"Server is unable to reply to the requested action"}},
 	Help:                  Response{CodeHelp, []string{""}},
 	Status:                Response{CodeStatus, []string{""}},
+	Extensions:            Response{CodeStatus, []string{"<domain>", "HELP"}},
 }
 
 var hostname string
