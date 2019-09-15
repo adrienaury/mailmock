@@ -2,8 +2,8 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/adrienaury/mailmock)](https://goreportcard.com/report/github.com/adrienaury/mailmock)
 [![Github Release Card](https://img.shields.io/github/release/adrienaury/mailmock)](https://github.com/adrienaury/mailmock/releases)
-[![codecov](https://codecov.io/gh/adrienaury/mailmock/branch/develop/graph/badge.svg)](https://codecov.io/gh/adrienaury/mailmock)
-[![Build Status](https://travis-ci.org/adrienaury/mailmock.svg?branch=develop)](https://travis-ci.org/adrienaury/mailmock)
+[![codecov](https://codecov.io/gh/adrienaury/mailmock/branch/master/graph/badge.svg)](https://codecov.io/gh/adrienaury/mailmock)
+[![Build Status](https://travis-ci.org/adrienaury/mailmock.svg?branch=master)](https://travis-ci.org/adrienaury/mailmock)
 
 Mailmock is a lightweight SMTP server designed for testing. It exposes a REST API which will enable your CI/CD to check what transaction were made and what was sent to who.
 
