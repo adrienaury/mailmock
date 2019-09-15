@@ -49,6 +49,10 @@ mkdir:
 tidy: ## Add missing and remove unused modules
 	GO111MODULE=on go mod tidy
 
+.PHONY: lint
+lint: ## Examines Go source code and reports suspicious constructs
+	golangci-lint run -E misspell -E gocyclo -E gosec -E unparam -E goimports -E nakedret -E gocritic -E whitespace
+
 .PHONY: build-%
 build-%: mkdir
 	GO111MODULE=on go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
@@ -72,7 +76,7 @@ release-%: mkdir
 	GO111MODULE=on go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: release
-release: clean info $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
+release: clean info lint $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
 
 .PHONY: docker
 docker: info ## Build docker image locally
