@@ -51,7 +51,7 @@ tidy: ## Add missing and remove unused modules
 
 .PHONY: lint
 lint: ## Examines Go source code and reports suspicious constructs
-	golangci-lint run -E misspell -E gocyclo -E gosec -E unparam -E goimports -E nakedret -E gocritic -E whitespace
+	golangci-lint run -E misspell -Egocyclo -Egosec -Eunparam -Egoimports -Enakedret -Egocritic -Ewhitespace
 
 .PHONY: build-%
 build-%: mkdir
