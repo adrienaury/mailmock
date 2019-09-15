@@ -83,7 +83,7 @@ func TestTransactionNominal(t *testing.T) {
 
 	res, err = tr.Data(MailData)
 	assert.NoError(t, err, "Data transactions MUST NOT return an error during data transfer")
-	assert.NotNil(t, res, "Data transactions MUST return a response after a successfull data transfer")
+	assert.NotNil(t, res, "Data transactions MUST return a response after a successful data transfer")
 	assert.Equal(t, smtpd.CodeSuccess, res.Code, "Data transactions MUST return response code 250 to a well-formed data transfer")
 	assert.Equal(t, smtpd.TSCompleted, tr.State, "Data transactions MUST mutate to completed state after a well-formed data transfer")
 	assert.Equal(t, []string{MailCommand.FullCmd, "250 OK", RcptCommand.FullCmd, "250 OK", DataCommand.FullCmd, "354 Start mail input; end with <CRLF>.<CRLF>", MailData[0], MailData[1], MailData[2], ".", "250 OK"}, tr.History, "Data transactions MUST update their history after a well-formed data transfer")
@@ -361,9 +361,9 @@ func TestTransactionInvalidState(t *testing.T) {
 	assert.Error(t, err, "")
 	assert.Nil(t, res, "")
 
-	assert.Panics(t, func() { tr.Process(&MailCommand) }, "")
+	assert.Panics(t, func() { _, _ = tr.Process(&MailCommand) }, "")
 
-	assert.Panics(t, func() { tr.Abort() }, "")
+	assert.Panics(t, func() { _ = tr.Abort() }, "")
 
 	fmt.Println(tr)
 }

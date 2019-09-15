@@ -32,7 +32,7 @@ const (
 
 	FieldSession  = "session"  // Current session.
 	FieldCommand  = "command"  // Current command being processed.
-	FieldResponse = "response" // Current response (to be) emited.
+	FieldResponse = "response" // Current response (to be) emitted.
 )
 
 // Fields is used to define the content of an event with structured fields.

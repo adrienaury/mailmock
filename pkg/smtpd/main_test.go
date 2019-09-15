@@ -18,7 +18,11 @@ func TestMain(m *testing.M) {
 	smtpd.SetReply(smtpd.Ready, "Service ready")
 	smtpd.SetReply(smtpd.Closing, "Service closing transmission channel")
 	srv := smtpd.NewServer("mockmail", "localhost", "1024", &th, nil)
-	go srv.ListenAndServe(make(chan struct{}))
+	go func() {
+		if err := srv.ListenAndServe(make(chan struct{})); err != nil {
+			panic(err)
+		}
+	}()
 	os.Exit(m.Run())
 }
 

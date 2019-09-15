@@ -78,10 +78,18 @@ func main() {
 
 	viper.SetEnvPrefix("mailmock") // will be uppercased automatically
 
-	viper.BindEnv("httpPort")
-	viper.BindEnv("smtpPort")
-	viper.BindEnv("address")
-	viper.BindEnv("logLevel")
+	if err := viper.BindEnv("httpPort"); err != nil {
+		panic(fmt.Errorf("failed to bind environment variable: %s", err))
+	}
+	if err := viper.BindEnv("smtpPort"); err != nil {
+		panic(fmt.Errorf("failed to bind environment variable: %s", err))
+	}
+	if err := viper.BindEnv("address"); err != nil {
+		panic(fmt.Errorf("failed to bind environment variable: %s", err))
+	}
+	if err := viper.BindEnv("logLevel"); err != nil {
+		panic(fmt.Errorf("failed to bind environment variable: %s", err))
+	}
 
 	viper.SetDefault("httpPort", "http")
 	viper.SetDefault("smtpPort", "smtp")
@@ -97,7 +105,9 @@ func main() {
 		viper.AddConfigPath(".")               // optionally look for config in the working directory
 	}
 
-	viper.BindPFlags(pflag.CommandLine)
+	if err := viper.BindPFlags(pflag.CommandLine); err != nil {
+		panic(fmt.Errorf("failed to bind flags: %s", err))
+	}
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {

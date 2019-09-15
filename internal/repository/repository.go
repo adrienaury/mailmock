@@ -28,9 +28,9 @@ func Store(o interface{}) int {
 }
 
 // Use returns the object with ID or nil.
-func Use(ID int) interface{} {
-	if ID < len(storedObjects) {
-		return storedObjects[ID]
+func Use(id int) interface{} {
+	if id < len(storedObjects) {
+		return storedObjects[id]
 	}
 	return nil
 }

@@ -127,8 +127,7 @@ func (tr *Transaction) handleCommand(cmd *Command) (*Response, error) {
 }
 
 func (tr *Transaction) handleCommandInitiated(cmd *Command) (*Response, error) {
-	switch cmd.Name {
-	case "MAIL":
+	if cmd.Name == "MAIL" {
 		tr.Mail.Envelope.Sender = cmd.NamedArgs["FROM"]
 		tr.State = TSInProgress
 		return r(Success), nil
@@ -150,11 +149,11 @@ func (tr *Transaction) handleCommandInProgress(cmd *Command) (*Response, error) 
 	return r(BadSequence), nil
 }
 
-func (tr *Transaction) handleCommandCompleted(cmd *Command) (*Response, error) {
+func (tr *Transaction) handleCommandCompleted(*Command) (*Response, error) {
 	return nil, fmt.Errorf("Sorry, this transaction is completed ans doen't accept any command")
 }
 
-func (tr *Transaction) handleCommandAborted(cmd *Command) (*Response, error) {
+func (tr *Transaction) handleCommandAborted(*Command) (*Response, error) {
 	return nil, fmt.Errorf("Sorry, this transaction is aborted ans doen't accept any command")
 }
 

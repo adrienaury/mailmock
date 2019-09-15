@@ -135,10 +135,13 @@ func (s *Session) serveLoop(stop <-chan struct{}) {
 			}
 		}
 
-		if input, err := s.conn.ReadLine(); err == io.EOF || err == io.ErrClosedPipe {
+		input, err := s.conn.ReadLine()
+		errop, ok := err.(net.Error)
+		switch {
+		case err == io.EOF || err == io.ErrClosedPipe:
 			s.logger.Error("Lost client connection, quitting", log.Fields{log.FieldError: err})
 			res = s.quit()
-		} else if errop, ok := err.(net.Error); ok && errop.Timeout() {
+		case ok && errop.Timeout():
 			if s.mustStop {
 				s.logger.Warn("Session interrupted because server is shutting down")
 			} else {
@@ -148,10 +151,10 @@ func (s *Session) serveLoop(stop <-chan struct{}) {
 				s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(SessionTimeout)})
 			}
 			return
-		} else if err != nil {
+		case err != nil:
 			s.logger.Error("Network error, requested action cannot be processed", log.Fields{log.FieldError: err})
 			res = r(Abort)
-		} else {
+		default:
 			s.logger.Debug("Received command", log.Fields{log.FieldCommand: input})
 			res = s.receive(input)
 			if res.IsError() {
@@ -279,7 +282,7 @@ func (s *Session) data(cmd *Command) *Response {
 	return res
 }
 
-func (s *Session) verify(address string) *Response {
+func (s *Session) verify(string) *Response {
 	return r(CommandNotImplemented)
 }
 
