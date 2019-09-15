@@ -19,14 +19,20 @@ package log
 
 // Name of fields, exhaustive list.
 const (
-	FieldApp      = "app"      // Name of the application.
-	FieldService  = "service"  // Name of the service.
-	FieldListen   = "addr"     // Listened address and port.
-	FieldServer   = "server"   // Name of the server.
-	FieldError    = "error"    // Error causing the event.
+	FieldApp       = "app"        // Name of the application.
+	FieldVersion   = "version"    // Version of the application.
+	FieldCommit    = "commit"     // Commit hash.
+	FieldBuildDate = "build_date" // Build date.
+	FieldBuiltBy   = "built_by"   // Identity of build owner.
+
+	FieldService = "service" // Name of the service.
+	FieldListen  = "addr"    // Listened address and port.
+	FieldServer  = "server"  // Name of the server.
+	FieldError   = "error"   // Error causing the event.
+
 	FieldSession  = "session"  // Current session.
 	FieldCommand  = "command"  // Current command being processed.
-	FieldResponse = "response" // Current response (to be) emited.
+	FieldResponse = "response" // Current response (to be) emitted.
 )
 
 // Fields is used to define the content of an event with structured fields.

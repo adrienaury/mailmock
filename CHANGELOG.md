@@ -7,11 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for 0.3.0
+### Planned for 0.4.0
 
-- SMTP multilines responses
-- HELP command
-- Configurable
+- Refactor Session to use TCPConn
+- SMTP relay mode
 
 ### Planned for 1.0.0
 
@@ -31,7 +30,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gracefull restarts with github.com/cloudflare/tableflip
 - Live reloading of configuration
 - Extend API with search service
-- Possibility to enable SMTP relay mode
+
+## [0.3.0] - 2019-09-15
+
+### Fixed
+
+- Fix build date variable name
+- Fix HTTP Server read and write timeouts
+- Fix SMTP responses for session timeout and server shutting down
+
+### Added
+
+- SMTP multilines responses
+- HELP command (first extented command)
+- Configurable with config file, env variable or command argument flags
 
 ## [0.2.0] - 2019-08-26
 

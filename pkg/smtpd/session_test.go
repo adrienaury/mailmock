@@ -2,6 +2,8 @@ package smtpd_test
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"net/textproto"
 	"strings"
@@ -25,6 +27,20 @@ func (c *MockConn) Write(p []byte) (n int, err error) {
 }
 
 func (c *MockConn) Close() error {
+	return nil
+}
+
+type EOFConn struct{}
+
+func (c *EOFConn) Read(p []byte) (n int, err error) {
+	return 0, io.EOF
+}
+
+func (c *EOFConn) Write(p []byte) (n int, err error) {
+	return 0, io.EOF
+}
+
+func (c *EOFConn) Close() error {
 	return nil
 }
 
@@ -120,6 +136,40 @@ func TestSessionVerify(t *testing.T) {
 		rcv string = strings.Join([]string{
 			"220 Service ready",
 			"502 Command not implemented",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
+func TestSessionHeloHelp(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"HELO localhost",
+			"HELP",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"250 OK",
+			"500 Syntax error, command unrecognized",
+			"221 Service closing transmission channel",
+			"",
+		}, "\r\n")
+	)
+	test(t, snd, rcv)
+}
+
+func TestSessionEhloHelp(t *testing.T) {
+	var (
+		snd string = strings.Join([]string{
+			"EHLO localhost",
+			"HELP",
+		}, "\r\n")
+		rcv string = strings.Join([]string{
+			"220 Service ready",
+			"250 OK (extended)",
+			"214 ",
 			"221 Service closing transmission channel",
 			"",
 		}, "\r\n")
@@ -223,6 +273,8 @@ func TestClosedConnection(t *testing.T) {
 	var (
 		snd string = strings.Join([]string{
 			"HELO localhost",
+			"QUIT",
+			"HELO localhost",
 		}, "\r\n")
 		rcv string = strings.Join([]string{
 			"220 Service ready",
@@ -234,10 +286,30 @@ func TestClosedConnection(t *testing.T) {
 	test(t, snd, rcv)
 }
 
-func test(t *testing.T, snd string, rcv string) {
+func test(t *testing.T, snd string, rcv string) (s *smtpd.Session, rwc *MockConn) {
 	sndbuf := bytes.NewBuffer([]byte(snd))
 	rcvbuf := bytes.NewBuffer(nil)
-	rwc := &MockConn{sndbuf, rcvbuf}
+	rwc = &MockConn{sndbuf, rcvbuf}
+
+	c := textproto.NewConn(rwc)
+	assert.NotNil(t, c, "")
+
+	s = smtpd.NewSession(c, nil, nil)
+	assert.NotNil(t, s, "")
+
+	s.Serve(make(chan struct{}, 1))
+
+	responses, err := ioutil.ReadAll(rcvbuf)
+	assert.NoError(t, err, "")
+	assert.Equal(t, rcv, string(responses), "")
+
+	fmt.Println(s)
+
+	return s, rwc
+}
+
+func TestEOFConnection(t *testing.T) {
+	rwc := &EOFConn{}
 
 	c := textproto.NewConn(rwc)
 	assert.NotNil(t, c, "")
@@ -247,7 +319,9 @@ func test(t *testing.T, snd string, rcv string) {
 
 	s.Serve(make(chan struct{}, 1))
 
-	responses, err := ioutil.ReadAll(rcvbuf)
+	responses, err := ioutil.ReadAll(rwc)
 	assert.NoError(t, err, "")
-	assert.Equal(t, rcv, string(responses), "")
+	assert.Equal(t, strings.Join([]string{
+		"",
+	}, "\r\n"), string(responses), "")
 }

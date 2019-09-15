@@ -14,8 +14,10 @@ services:
   - docker
 install:
   - 'sudo snap install snapcraft --classic'
+  - 'curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.18.0'
+#  - 'go mod download'
 before_script: make info VERSION=${TRAVIS_BRANCH}
-script: go test -coverprofile=coverage.txt -covermode=atomic -v ./...
+script: make test && make lint
 after_success:
   - bash <(curl -s https://codecov.io/bash) -c
 deploy:

@@ -2,7 +2,8 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/adrienaury/mailmock)](https://goreportcard.com/report/github.com/adrienaury/mailmock)
 [![Github Release Card](https://img.shields.io/github/release/adrienaury/mailmock)](https://github.com/adrienaury/mailmock/releases)
-[![codecov](https://codecov.io/gh/adrienaury/mailmock/branch/master/graph/badge.svg)](https://codecov.io/gh/adrienaury/mailmock)
+[![codecov](https://codecov.io/gh/adrienaury/mailmock/branch/develop/graph/badge.svg)](https://codecov.io/gh/adrienaury/mailmock)
+[![Build Status](https://travis-ci.org/adrienaury/mailmock.svg?branch=develop)](https://travis-ci.org/adrienaury/mailmock)
 
 Mailmock is a lightweight SMTP server designed for testing. It exposes a REST API which will enable your CI/CD to check what transaction were made and what was sent to who.
 
@@ -29,10 +30,57 @@ Download the latest version for your OS from the [release page](https://github.c
 Then run it:
 
 ```bash
+# this will start mailmock with the default configuration,
+# binding the SMTP server on local port 25 and the HTTP server to local port 80
 mailmock
 ```
 
-Next releases will come with more configuration options.
+## Configuration
+
+Mailmock can be configured by (in order of precedence) :
+- passing flag argument on command line
+- setting environment variable
+- using a configuration file (JSON, TOML, YAML, HCL, envfile or Java properties formats supported)
+- using default provided values
+
+A mix of all of these possibilities can be used.
+
+| Flag argument     | Environment var   | Config file param | Default Value | Description                                                   |
+|-------------------|-------------------|-------------------|---------------|---------------------------------------------------------------|
+| --logLevel string | MAILMOCK_LOGLEVEL | logLevel          | info          | Set the logger level (trace, debug, info, warn, error)        |
+| --httpPort string | MAILMOCK_HTTPPORT | httpPort          | http          | Port number or alias (such as "http") used by the HTTP server |
+| --smtpPort string | MAILMOCK_SMTPPORT | smtpPort          | smtp          | Port number or alias (such as "smtp") used by the SMTP server |
+| --address string  | MAILMOCK_ADDRESS  | address           |               | IP or hostname                                                |
+| --config string   |                   |                   |               | Override default location of configuration file               |
+
+### Configuration file
+
+The configuration file can be placed in different locations :
+- /etc/mailmock/
+- $HOME/.mailmock/
+- ./ (working directory of the mailmock process)
+- location given by --config flag if present
+
+It must be named config.ext, possible values for ext : json, toml, yaml, yml, properties, props, prop, hcl, dotenv, env.
+
+#### Examples
+
+- config.yaml
+```yaml
+logLevel: debug
+httpPort: 1234
+smtpPort: 4321
+address: localhost
+```
+
+- config.json
+```json
+{
+    "logLevel": "warn",
+    "httpPort": "http",
+    "smtpPort": "smtp"
+}
+```
 
 ## Contribute
 
@@ -56,7 +104,7 @@ I'm Adrien and my mail is adrien.aury@gmail.com
 
 The project is licensed under the [GNU GENERAL PUBLIC LICENSE v3](https://www.gnu.org/licenses/gpl-3.0.html).
 
-### Exception notices
+#### Exception notices
 
 Some files contains a [GPL linking exception](https://en.wikipedia.org/wiki/GPL_linking_exception) to allow linking modules in any project (everything under pkg folder).
 
@@ -67,6 +115,12 @@ This project uses the following Go librairies :
 - github.com/go-chi/chi v4.0.2+incompatible
 - github.com/go-chi/render v1.0.1
 - github.com/stretchr/testify v1.3.0
+- github.com/heptio/workgroup v0.8.0-beta.1
+- github.com/sirupsen/logrus v1.4.2
+- logur.dev/logur v0.15.0
+- logur.dev/adapter/logrus v0.2.0
+- github.com/spf13/pflag v1.0.3
+- github.com/spf13/viper v1.4.0
 
 Here are the required copyright and permission notices :
 
@@ -74,6 +128,9 @@ Here are the required copyright and permission notices :
 Copyright (c) 2015-present Peter Kieltyka (https://github.com/pkieltyka), Google Inc.
 Copyright (c) 2016-Present https://github.com/go-chi authors
 Copyright (c) 2012-2018 Mat Ryer and Tyler Bunnell
+Copyright (c) 2019 Márk Sági-Kazár <mark.sagikazar@gmail.com>
+Copyright (c) 2014 Simon Eskildsen
+Copyright (c) 2014 Steve Francia
 
 MIT License
 
@@ -93,6 +150,53 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+```text
+Copyright © 2017 Heptio
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+```text
+Copyright (c) 2012 Alex Ogier. All rights reserved.
+Copyright (c) 2012 The Go Authors. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+   * Neither the name of Google Inc. nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
 ### Go standard librairies

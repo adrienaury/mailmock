@@ -45,8 +45,8 @@ type Code uint16
 
 // Response holds a 3 digit code and a messsage.
 type Response struct {
-	Code Code   `json:"code"`
-	Msg  string `json:"message"`
+	Code Code     `json:"code"`
+	Msg  []string `json:"message"`
 }
 
 // IsError returns true if the response is an error.
@@ -60,12 +60,44 @@ func (e Response) IsSuccess() bool {
 }
 
 func (e Response) String() string {
-	return fmt.Sprintf("%3d %s", e.Code, e.Msg)
+	var sb strings.Builder
+	for i, msg := range e.Msg {
+		if i == len(e.Msg)-1 {
+			sb.WriteString(fmt.Sprintf("%3d %s", e.Code, msg))
+		} else {
+			sb.WriteString(fmt.Sprintf("%3d-%s\r\n", e.Code, msg))
+		}
+	}
+	return sb.String()
 }
+
+// Resp is an alias for the type uint16
+type Resp uint16
+
+// Responses
+const (
+	Ready                 Resp = iota // First response
+	Closing                           // Service closing
+	Success                           // Requested action completed
+	Abort                             // Requested action aborted
+	Data                              // Ask for data input
+	NotAvailable                      // Service is not available
+	ShuttingDown                      // Service is shutting down
+	SessionTimeout                    // Session timeout
+	CommandUnrecognized               // Syntax error, command unrecognized
+	ParameterSyntax                   // Syntax error in parameters or arguments
+	CommandNotImplemented             // Command not implemented
+	BadSequence                       // Bad sequence of commands
+	NoValidRecipients                 // Transaction failed : no valid recipients
+	Help                              // Help response
+	Status                            // Server status
+	Misconfiguration                  // Unable to reply because of misconfiguration
+	Extensions                        // Reply to EHLO with supported extensions
+)
 
 // SMTP reply codes as defined by RFC 5321, 4.2.3
 const (
-	CodeStatusHelp              Code = 211 // System status, or system help reply
+	CodeStatus                  Code = 211 // System status, or system help reply
 	CodeHelp                    Code = 214 // Help message (Information on how to use the receiver or the meaning of a particular non-standard command; this reply is useful only to the human user)
 	CodeReady                   Code = 220 // <domain> Service ready
 	CodeClosing                 Code = 221 // <domain> Service closing transmission channel
@@ -91,49 +123,55 @@ const (
 	CodeMailFromRcptToParam     Code = 555 // MAIL FROM/RCPT TO parameters not recognized or not implemented
 )
 
-var replyText = map[Code]string{
-	CodeStatusHelp:              "",
-	CodeHelp:                    "",
-	CodeReady:                   "<domain> Service ready",
-	CodeClosing:                 "<domain> Service closing transmission channel",
-	CodeSuccess:                 "OK",
-	CodeUserNotLocalTemp:        "",
-	CodeCannotVerify:            "",
-	CodeAskForData:              "Start mail input; end with <CRLF>.<CRLF>",
-	CodeNotAvailable:            "<domain> Service not available, closing transmission channel",
-	CodeMailboxUnavailableTemp:  "",
-	CodeAbort:                   "Requested action aborted: error in processing",
-	CodeInsufficientStorageTemp: "",
-	CodeUnableAccomodateParam:   "",
-	CodeCommandUnrecognized:     "Syntax error, command unrecognized",
-	CodeParameterSyntax:         "Syntax error in parameters or arguments",
-	CodeNotImplemented:          "Command not implemented",
-	CodeBadSequence:             "Bad sequence of commands",
-	CodeParameterNotImplemented: "",
-	CodeMailboxUnavailablePerm:  "",
-	CodeUserNotLocalPerm:        "",
-	CodeInsufficientStoragePerm: "",
-	CodeMailboxNotAllowed:       "",
-	CodeTransactionFailed:       "No valid recipients",
-	CodeMailFromRcptToParam:     "",
+// Responses returned by the SMTP server
+var Responses = map[Resp]Response{
+	Ready:                 Response{CodeReady, []string{"<domain> Service ready"}},
+	Closing:               Response{CodeClosing, []string{"<domain> Service closing transmission channel"}},
+	Success:               Response{CodeSuccess, []string{"OK"}},
+	Data:                  Response{CodeAskForData, []string{"Start mail input; end with <CRLF>.<CRLF>"}},
+	NotAvailable:          Response{CodeNotAvailable, []string{"<domain> Service not available, closing transmission channel"}},
+	ShuttingDown:          Response{CodeNotAvailable, []string{"<domain> Service shutting down and closing transmission channel"}},
+	SessionTimeout:        Response{CodeNotAvailable, []string{"Your session timed out due to inactivity"}},
+	Abort:                 Response{CodeAbort, []string{"Requested action aborted: error in processing"}},
+	CommandUnrecognized:   Response{CodeCommandUnrecognized, []string{"Syntax error, command unrecognized"}},
+	ParameterSyntax:       Response{CodeParameterSyntax, []string{"Syntax error in parameters or arguments"}},
+	CommandNotImplemented: Response{CodeNotImplemented, []string{"Command not implemented"}},
+	BadSequence:           Response{CodeBadSequence, []string{"Bad sequence of commands"}},
+	NoValidRecipients:     Response{CodeTransactionFailed, []string{"No valid recipients"}},
+	Misconfiguration:      Response{CodeTransactionFailed, []string{"Server is unable to reply to the requested action"}},
+	Help:                  Response{CodeHelp, []string{""}},
+	Status:                Response{CodeStatus, []string{""}},
+	Extensions:            Response{CodeSuccess, []string{"<domain>", "HELP"}},
 }
 
-// SetReply sets reply text of given code.
-func SetReply(c Code, s string) {
-	replyText[c] = s
+var hostname string
+
+// SetReply set reply text of given code.
+func SetReply(resp Resp, s ...string) {
+	response := r(resp)
+	if len(s) > 0 && s[0] != "" {
+		response.Msg = s
+	}
+	for i, msg := range response.Msg {
+		response.Msg[i] = strings.ReplaceAll(msg, "<domain>", hostname)
+	}
+	Responses[resp] = *response
 }
 
-func r(c Code) *Response {
-	return &Response{c, replyText[c]}
+func r(r Resp) *Response {
+	response, ok := Responses[r]
+	if !ok {
+		response = Responses[Misconfiguration]
+	}
+	return &response
 }
 
 func init() {
-	var hostname string
 	var err error
 	if hostname, err = os.Hostname(); err != nil {
 		hostname = "localhost"
 	}
-	for code, text := range replyText {
-		replyText[code] = strings.ReplaceAll(text, "<domain>", hostname)
+	for code, text := range Responses {
+		SetReply(code, text.Msg...)
 	}
 }

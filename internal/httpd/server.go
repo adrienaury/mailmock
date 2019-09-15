@@ -22,6 +22,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/adrienaury/mailmock/internal/log"
 )
@@ -53,11 +54,20 @@ func (srv *Server) ListenAndServe(stop <-chan struct{}) error {
 	s := http.Server{
 		Addr:    net.JoinHostPort(srv.host, srv.port),
 		Handler: router,
+
+		ReadTimeout:       5 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		ReadHeaderTimeout: 20 * time.Second,
 	}
 
 	go func() {
 		<-stop // wait for stop signal
-		s.Shutdown(context.Background())
+		if err := s.Shutdown(context.Background()); err != nil {
+			srv.logger.Warn("Failed to shutdown HTTP server", log.Fields{log.FieldError: err})
+			if err = s.Close(); err != nil {
+				srv.logger.Warn("Failed to close HTTP server", log.Fields{log.FieldError: err})
+			}
+		}
 	}()
 
 	srv.logger.Info("HTTP Server is listening")

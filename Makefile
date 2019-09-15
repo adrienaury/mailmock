@@ -8,7 +8,7 @@ VERSION ?= $(shell git describe --tags --exact-match 2>/dev/null || git symbolic
 COMMIT_HASH ?= $(shell git rev-parse --short HEAD 2>/dev/null)
 BUILD_DATE ?= $(shell date +%FT%T%z)
 BUILD_BY ?= $(shell git config user.email)
-LDFLAGS += -X main.version=${VERSION} -X main.commit=${COMMIT_HASH} -X main.date=${BUILD_DATE} -X main.builtBy=${BUILD_BY}
+LDFLAGS += -X main.version=${VERSION} -X main.commit=${COMMIT_HASH} -X main.buildDate=${BUILD_DATE} -X main.builtBy=${BUILD_BY}
 
 # Project variables
 DOCKER_IMAGE = adrienaury/mailmock
@@ -49,6 +49,13 @@ mkdir:
 tidy: ## Add missing and remove unused modules
 	GO111MODULE=on go mod tidy
 
+.PHONY: lint
+lint: ## Examines Go source code and reports suspicious constructs
+ifeq (, $(shell which golangci-lint))
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.18.0
+endif
+	golangci-lint run -E misspell -E gocyclo -E gosec -E unparam -E goimports -E nakedret -E gocritic
+
 .PHONY: build-%
 build-%: mkdir
 	GO111MODULE=on go build ${GOARGS} -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
@@ -72,7 +79,7 @@ release-%: mkdir
 	GO111MODULE=on go build ${GOARGS} -ldflags "-w -s ${LDFLAGS}" -o ${BUILD_DIR}/$* ./cmd/$*
 
 .PHONY: release
-release: clean info $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
+release: clean info lint $(patsubst cmd/%,release-%,$(wildcard cmd/*)) ## Build all binaries for production
 
 .PHONY: docker
 docker: info ## Build docker image locally

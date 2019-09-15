@@ -62,6 +62,7 @@ var listOfValidCommands = map[string]cmdDescription{
 	"RSET": {0, true, []string{}},
 	"QUIT": {0, true, []string{}},
 	"VRFY": {1, true, []string{""}},
+	"HELP": {0, false, []string{}},
 }
 
 // ParseCommand parses a SMTP command, returns appropriate response if the command is malformed
@@ -71,7 +72,7 @@ func ParseCommand(input string) (*Command, *Response) {
 	name := strings.ToUpper(strings.TrimSpace(elmts[0]))
 	desc, ok := listOfValidCommands[name]
 	if !ok {
-		return nil, r(CodeCommandUnrecognized)
+		return nil, r(CommandUnrecognized)
 	}
 
 	if desc.numberOfArgument != len(desc.argumentNames) {
@@ -81,11 +82,11 @@ func ParseCommand(input string) (*Command, *Response) {
 	elmts = elmts[1:]
 
 	if len(elmts) < desc.numberOfArgument {
-		return nil, r(CodeParameterSyntax)
+		return nil, r(ParameterSyntax)
 	}
 
 	if len(elmts) > desc.numberOfArgument && desc.isStrict {
-		return nil, r(CodeParameterSyntax)
+		return nil, r(ParameterSyntax)
 	}
 
 	command := &Command{FullCmd: input, Name: name, PositionalArgs: []string{}, NamedArgs: map[string]string{}}
@@ -98,19 +99,19 @@ func ParseCommand(input string) (*Command, *Response) {
 		argName := desc.argumentNames[argPos]
 		if argName != "" {
 			if strings.Count(arg, ":") != 1 {
-				return nil, r(CodeParameterSyntax)
+				return nil, r(ParameterSyntax)
 			}
 			argSplit := strings.Split(arg, ":")
 			if strings.ToUpper(argSplit[0]) != argName {
-				return nil, r(CodeParameterSyntax)
+				return nil, r(ParameterSyntax)
 			}
 			command.NamedArgs[argName] = strings.TrimSpace(argSplit[1])
 			if command.NamedArgs[argName] == "" {
-				return nil, r(CodeParameterSyntax)
+				return nil, r(ParameterSyntax)
 			}
 		} else {
 			if arg == "" {
-				return nil, r(CodeParameterSyntax)
+				return nil, r(ParameterSyntax)
 			}
 			command.PositionalArgs = append(command.PositionalArgs, strings.TrimSpace(arg))
 		}

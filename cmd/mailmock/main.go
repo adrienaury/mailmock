@@ -19,6 +19,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -28,18 +29,20 @@ import (
 	"github.com/adrienaury/mailmock/internal/log"
 	"github.com/adrienaury/mailmock/internal/repository"
 	"github.com/adrienaury/mailmock/pkg/smtpd"
-	"github.com/goph/logur/adapters/logrusadapter"
 	"github.com/heptio/workgroup"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+	logur "logur.dev/adapter/logrus"
 )
 
 // Provisioned by ldflags
 // nolint: gochecknoglobals
 var (
-	version string
-	commit  string
-	build   string
-	builtBy string
+	version   string
+	commit    string
+	buildDate string
+	builtBy   string
 )
 
 var th smtpd.TransactionHandler = func(tr *smtpd.Transaction) {
@@ -62,40 +65,89 @@ func main() {
 	fmt.Println("Source code and documentation are available at https://github.com/adrienaury/mailmock")
 	fmt.Println()
 
-	defaultSMTPPort := "smtp"
-	defaultHTTPPort := "http"
-	defaultListenAddr := ""
+	var cfgFile string
 
-	smtpPort := os.Getenv("MAILMOCK_SMTP_PORT")
-	if smtpPort == "" {
-		smtpPort = defaultSMTPPort
+	flag.String("httpPort", "http", "HTTP Port")
+	flag.String("smtpPort", "smtp", "SMTP Port")
+	flag.String("address", "", "Listening address")
+	flag.String("logLevel", "info", "Log level (trace, debug, info, warn, error)")
+	flag.StringVar(&cfgFile, "config", "", "Configuration file")
+
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.Parse()
+
+	viper.SetEnvPrefix("mailmock") // will be uppercased automatically
+
+	if err := viper.BindEnv("httpPort"); err != nil {
+		panic(fmt.Errorf("failed to bind environment variable: %s", err))
+	}
+	if err := viper.BindEnv("smtpPort"); err != nil {
+		panic(fmt.Errorf("failed to bind environment variable: %s", err))
+	}
+	if err := viper.BindEnv("address"); err != nil {
+		panic(fmt.Errorf("failed to bind environment variable: %s", err))
+	}
+	if err := viper.BindEnv("logLevel"); err != nil {
+		panic(fmt.Errorf("failed to bind environment variable: %s", err))
 	}
 
-	httpPort := os.Getenv("MAILMOCK_HTTP_PORT")
-	if httpPort == "" {
-		httpPort = defaultHTTPPort
+	viper.SetDefault("httpPort", "http")
+	viper.SetDefault("smtpPort", "smtp")
+	viper.SetDefault("address", "")
+	viper.SetDefault("logLevel", "info")
+
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+		viper.SetConfigName("config")          // name of config file (without extension)
+		viper.AddConfigPath("/etc/mailmock/")  // path to look for the config file in
+		viper.AddConfigPath("$HOME/.mailmock") // call multiple times to add many search paths
+		viper.AddConfigPath(".")               // optionally look for config in the working directory
 	}
 
-	listenAddr := os.Getenv("MAILMOCK_LISTEN_ADDR")
-	if listenAddr == "" {
-		listenAddr = defaultListenAddr
+	if err := viper.BindPFlags(pflag.CommandLine); err != nil {
+		panic(fmt.Errorf("failed to bind flags: %s", err))
 	}
 
-	hostname := "localhost"
-	hostname, _ = os.Hostname()
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// Config file not found; ignore error
+		} else {
+			// Config file was found but another error was produced
+			panic(fmt.Errorf("failed to read config file: %s", err))
+		}
+	}
+
+	smtpPort := viper.GetString("smtpPort")
+	httpPort := viper.GetString("httpPort")
+	listenAddr := viper.GetString("address")
+	logLevel, err := logrus.ParseLevel(viper.GetString("logLevel"))
+	if err != nil {
+		panic(err)
+	}
 
 	// sets the SMTP greeting banner
-	smtpd.SetReply(smtpd.CodeReady,
-		fmt.Sprintf("%v Mailmock %v Service ready - this is a testing SMTP server, it does not deliver e-mails", hostname, version))
+	smtpd.SetReply(smtpd.Ready,
+		fmt.Sprintf("<domain> Mailmock %v Service ready", version),
+		"This is a testing SMTP server, it does not deliver e-mails")
+	smtpd.SetReply(smtpd.Help,
+		"This is a testing SMTP server, it does not deliver e-mails",
+		"Visit https://github.com/adrienaury/mailmock for more information")
 
 	// logrus initialization
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	logrus.SetOutput(os.Stdout)
-	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetLevel(logLevel)
 
-	logger := log.NewLoggerAdapter(logrusadapter.New(logrus.StandardLogger()))
+	logger := log.NewLoggerAdapter(logur.New(logrus.StandardLogger()))
 	logger = logger.WithFields(log.Fields{
 		log.FieldApp: "mailmock",
+	})
+	logger.Debug("Build information", log.Fields{
+		log.FieldVersion:   version,
+		log.FieldCommit:    commit,
+		log.FieldBuildDate: buildDate,
+		log.FieldBuiltBy:   builtBy,
 	})
 
 	loggerSMTP := logger.WithFields(log.Fields{
@@ -127,7 +179,7 @@ func main() {
 		httpsrv := httpd.NewServer("main", listenAddr, httpPort, loggerHTTP)
 		return httpsrv.ListenAndServe(stop)
 	})
-	err := group.Run()
+	err = group.Run()
 	if err != nil {
 		logger.Error("Program exited with error", log.Fields{log.FieldError: err})
 		os.Exit(1)

@@ -63,6 +63,7 @@ type Session struct {
 	State    SessionState `json:"state"`
 	Client   string       `json:"client"`
 	Tr       *Transaction `json:"transaction"`
+	Extended bool
 	conn     *textproto.Conn
 	th       *TransactionHandler
 	logger   log.Logger
@@ -88,12 +89,14 @@ func NewSession(c *textproto.Conn, th *TransactionHandler, logger log.Logger) *S
 func (s *Session) Serve(stop <-chan struct{}) {
 	if s.State == SSClosed {
 		s.logger.Warn("Cannot serve a closed session")
-		s.conn.PrintfLine("%v", r(CodeNotAvailable))
+		if err := s.conn.PrintfLine("%v", r(NotAvailable)); err != nil {
+			s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(NotAvailable)})
+		}
 		return
 	}
 
-	if err := s.conn.PrintfLine("%v", r(CodeReady)); err != nil {
-		s.logger.Error("Failed to send greeting message, quitting session", log.Fields{log.FieldError: err})
+	if err := s.conn.PrintfLine("%v", r(Ready)); err != nil {
+		s.logger.Error("Failed to send greeting message, quitting session", log.Fields{log.FieldError: err, log.FieldResponse: r(Ready)})
 		s.quit()
 		return
 	}
@@ -109,7 +112,7 @@ func (s *Session) Serve(stop <-chan struct{}) {
 			s.logger.Warn("Server must stop, session will timeout in 30 seconds (at most)")
 			<-time.After(30 * time.Second)
 			if s.tcpConn != nil {
-				s.tcpConn.SetReadDeadline(time.Now())
+				_ = s.tcpConn.SetReadDeadline(time.Now())
 			}
 		case <-shutdown:
 		}
@@ -127,24 +130,31 @@ func (s *Session) serveLoop(stop <-chan struct{}) {
 		if s.tcpConn != nil {
 			// SMTP server SHOULD have a timeout of at least 5 minutes while it
 			// is awaiting the next command from the sender (RFC 5321 4.5.3.2.7.)
-			s.tcpConn.SetReadDeadline(time.Now().Add(time.Minute * 5))
+			if err := s.tcpConn.SetReadDeadline(time.Now().Add(time.Minute * 5)); err != nil {
+				s.logger.Error("SetDeadline on SMTP session failed", log.Fields{log.FieldError: err})
+			}
 		}
 
-		if input, err := s.conn.ReadLine(); err == io.EOF || err == io.ErrClosedPipe {
+		input, err := s.conn.ReadLine()
+		errop, ok := err.(net.Error)
+		switch {
+		case err == io.EOF || err == io.ErrClosedPipe:
 			s.logger.Error("Lost client connection, quitting", log.Fields{log.FieldError: err})
 			res = s.quit()
-		} else if errop, ok := err.(net.Error); ok && errop.Timeout() {
+		case ok && errop.Timeout():
 			if s.mustStop {
 				s.logger.Warn("Session interrupted because server is shutting down")
 			} else {
 				s.logger.Warn("Session timed out")
 			}
-			s.conn.PrintfLine("%v", r(CodeNotAvailable))
+			if err := s.conn.PrintfLine("%v", r(SessionTimeout)); err != nil {
+				s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(SessionTimeout)})
+			}
 			return
-		} else if err != nil {
+		case err != nil:
 			s.logger.Error("Network error, requested action cannot be processed", log.Fields{log.FieldError: err})
-			res = r(CodeAbort)
-		} else {
+			res = r(Abort)
+		default:
 			s.logger.Debug("Received command", log.Fields{log.FieldCommand: input})
 			res = s.receive(input)
 			if res.IsError() {
@@ -158,13 +168,15 @@ func (s *Session) serveLoop(stop <-chan struct{}) {
 		case <-stop:
 			// We need to shutdown
 			s.logger.Warn("Session interrupted because server is shutting down")
-			s.conn.PrintfLine("%v", r(CodeNotAvailable))
+			if err := s.conn.PrintfLine("%v", r(ShuttingDown)); err != nil {
+				s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: r(ShuttingDown)})
+			}
 			return
 		default:
 		}
 
 		if err := s.conn.PrintfLine("%v", res); err != nil {
-			s.logger.Error("Network error, failed to send response, quitting", log.Fields{log.FieldError: err})
+			s.logger.Error("Network error, failed to send response, quitting", log.Fields{log.FieldError: err, log.FieldResponse: res})
 			s.quit()
 			return
 		}
@@ -179,9 +191,9 @@ func (s *Session) receive(input string) (res *Response) {
 	}
 	switch cmd.Name {
 	case "HELO":
-		res = s.hello(cmd.PositionalArgs[0])
+		res = s.hello(cmd.PositionalArgs[0], false)
 	case "EHLO":
-		res = s.hello(cmd.PositionalArgs[0])
+		res = s.hello(cmd.PositionalArgs[0], true)
 	case "MAIL":
 		res = s.mail(cmd)
 	case "RCPT":
@@ -196,27 +208,33 @@ func (s *Session) receive(input string) (res *Response) {
 		res = s.quit()
 	case "VRFY":
 		res = s.verify(cmd.PositionalArgs[0])
+	case "HELP":
+		res = s.help(cmd.PositionalArgs)
 	default:
 		s.logger.Error("Coding error, this should not happen")
 	}
 	return res
 }
 
-func (s *Session) hello(client string) *Response {
+func (s *Session) hello(client string, extended bool) *Response {
 	s.Client = client
 	s.State = SSReady
-	return r(CodeSuccess)
+	if extended {
+		s.Extended = true
+		return r(Extensions)
+	}
+	return r(Success)
 }
 
 func (s *Session) mail(cmd *Command) *Response {
 	if s.State != SSReady {
-		return r(CodeBadSequence)
+		return r(BadSequence)
 	}
 	s.Tr = NewTransaction()
 	s.logger.Debug("Started transaction")
 	res, err := s.Tr.Process(cmd)
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 	s.State = SSBusy
 	return res
@@ -224,55 +242,58 @@ func (s *Session) mail(cmd *Command) *Response {
 
 func (s *Session) rcpt(cmd *Command) *Response {
 	if s.State != SSBusy {
-		return r(CodeBadSequence)
+		return r(BadSequence)
 	}
 	res, err := s.Tr.Process(cmd)
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 	return res
 }
 
 func (s *Session) data(cmd *Command) *Response {
 	if s.State != SSBusy {
-		return r(CodeBadSequence)
+		return r(BadSequence)
 	}
 	if len(s.Tr.Mail.Envelope.Recipients) == 0 {
-		return r(CodeTransactionFailed)
+		return r(NoValidRecipients)
 	}
 
 	res, err := s.Tr.Process(cmd)
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 
-	s.conn.PrintfLine("%v", res)
+	if err = s.conn.PrintfLine("%v", res); err != nil {
+		s.logger.Error("Failed to send response to client", log.Fields{log.FieldError: err, log.FieldResponse: res})
+		return r(Abort)
+	}
 	data, err := s.conn.ReadDotLines()
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 
 	res, err = s.Tr.Data(data)
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 
 	s.State = SSReady
 	return res
 }
 
-func (s *Session) verify(address string) *Response {
-	return r(CodeNotImplemented)
+func (s *Session) verify(string) *Response {
+	return r(CommandNotImplemented)
 }
 
 func (s *Session) noop() *Response {
-	return r(CodeSuccess)
+	return r(Success)
 }
 
 func (s *Session) reset() *Response {
 	err := s.Tr.Abort()
 	if err != nil {
-		return r(CodeAbort)
+		return r(Abort)
 	}
 
 	if s.Client != "" {
@@ -281,13 +302,20 @@ func (s *Session) reset() *Response {
 		s.State = SSInitiated
 	}
 
-	return r(CodeSuccess)
+	return r(Success)
 }
 
 func (s *Session) quit() *Response {
 	s.State = SSClosed
-	s.Tr.Abort()
-	return r(CodeClosing)
+	_ = s.Tr.Abort()
+	return r(Closing)
+}
+
+func (s *Session) help([]string) *Response {
+	if !s.Extended {
+		return r(CommandUnrecognized)
+	}
+	return r(Help)
 }
 
 func (s *Session) handleTransaction() {
