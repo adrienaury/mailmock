@@ -2,6 +2,7 @@ package smtpd_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/textproto"
@@ -329,6 +330,8 @@ func test(t *testing.T, snd string, rcv string) (s *smtpd.Session, rwc *MockConn
 	responses, err := ioutil.ReadAll(rcvbuf)
 	assert.NoError(t, err, "")
 	assert.Equal(t, rcv, string(responses), "")
+
+	fmt.Println(s)
 
 	return s, rwc
 }
