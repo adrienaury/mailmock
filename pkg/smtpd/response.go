@@ -141,7 +141,7 @@ var Responses = map[Resp]Response{
 	Misconfiguration:      Response{CodeTransactionFailed, []string{"Server is unable to reply to the requested action"}},
 	Help:                  Response{CodeHelp, []string{""}},
 	Status:                Response{CodeStatus, []string{""}},
-	Extensions:            Response{CodeStatus, []string{"<domain>", "HELP"}},
+	Extensions:            Response{CodeSuccess, []string{"<domain>", "HELP"}},
 }
 
 var hostname string
