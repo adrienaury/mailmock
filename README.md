@@ -38,6 +38,7 @@ mailmock
 ## Configuration
 
 Mailmock can be configured by (in order of precedence) :
+
 - passing flag argument on command line
 - setting environment variable
 - using a configuration file (JSON, TOML, YAML, HCL, envfile or Java properties formats supported)
@@ -45,17 +46,18 @@ Mailmock can be configured by (in order of precedence) :
 
 A mix of all of these possibilities can be used.
 
-| Flag argument     | Environment var   | Config file param | Default Value | Description                                                   |
-|-------------------|-------------------|-------------------|---------------|---------------------------------------------------------------|
-| --logLevel string | MAILMOCK_LOGLEVEL | logLevel          | info          | Set the logger level (trace, debug, info, warn, error)        |
-| --httpPort string | MAILMOCK_HTTPPORT | httpPort          | http          | Port number or alias (such as "http") used by the HTTP server |
-| --smtpPort string | MAILMOCK_SMTPPORT | smtpPort          | smtp          | Port number or alias (such as "smtp") used by the SMTP server |
-| --address string  | MAILMOCK_ADDRESS  | address           |               | IP or hostname                                                |
-| --config string   |                   |                   |               | Override default location of configuration file               |
+| Flag argument | Environment var   | Config file param | Default Value | Description                                            |
+|---------------|-------------------|-------------------|---------------|--------------------------------------------------------|
+| --logLevel    | MAILMOCK_LOGLEVEL | logLevel          | info          | Set the logger level (trace, debug, info, warn, error) |
+| --httpPort    | MAILMOCK_HTTPPORT | httpPort          | http          | HTTP Port number or alias (such as "http")             |
+| --smtpPort    | MAILMOCK_SMTPPORT | smtpPort          | smtp          | SMTP Port number or alias (such as "smtp")             |
+| --address     | MAILMOCK_ADDRESS  | address           |               | IP or hostname                                         |
+| --config      |                   |                   |               | Override default location of configuration file        |
 
 ### Configuration file
 
 The configuration file can be placed in different locations :
+
 - /etc/mailmock/
 - $HOME/.mailmock/
 - ./ (working directory of the mailmock process)
@@ -66,6 +68,7 @@ It must be named config.ext, possible values for ext : json, toml, yaml, yml, pr
 #### Examples
 
 - config.yaml
+
 ```yaml
 logLevel: debug
 httpPort: 1234
@@ -74,6 +77,7 @@ address: localhost
 ```
 
 - config.json
+
 ```json
 {
     "logLevel": "warn",
