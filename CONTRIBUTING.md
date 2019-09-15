@@ -26,6 +26,8 @@ Source code must be formatted with `gofmt` and verified with `go_vet` and `golin
 
 Use `goimports` to remove unused imports.
 
+A convenient make target will run all linters in a single command : `make lint`.
+
 ## Cyclomatic complexity
 
 Use [gocyclo](https://github.com/fzipp/gocyclo) to compute cyclomatic complexity. Cyclomatic complexity of functions/methods must be below 15.

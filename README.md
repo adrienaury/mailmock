@@ -59,6 +59,7 @@ The configuration file can be placed in different locations :
 - /etc/mailmock/
 - $HOME/.mailmock/
 - ./ (working directory of the mailmock process)
+- location given by --config flag if present
 
 It must be named config.ext, possible values for ext : json, toml, yaml, yml, properties, props, prop, hcl, dotenv, env.
 
