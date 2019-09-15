@@ -29,7 +29,7 @@ Library|Licenses
 ### Details
 
 
-#### **adapter-logrus (56a79b90691a6c9a698ed191984abb3d684ffe47)**
+#### **adapter-logrus**
 
 
 * Licenses
@@ -68,7 +68,7 @@ Library|Licenses
 ---
 ---
 
-#### **viper (99520c81d86ee7d0ee2ef143c8576be0c7533827)**
+#### **viper**
 
 
 * Licenses
@@ -108,7 +108,7 @@ Library|Licenses
 ---
 ---
 
-#### **pflag (972238283c0625cf3e881de7699ba8f2524c340a)**
+#### **pflag**
 
 
 * Licenses
@@ -156,7 +156,7 @@ Library|Licenses
 ---
 ---
 
-#### **logrus (de736cf91b921d56253b4010270681d33fdf7cb5)**
+#### **logrus**
 
 
 * Licenses
@@ -197,7 +197,7 @@ Library|Licenses
 ---
 ---
 
-#### **workgroup (905fccf41a08323fdad6a1bd277290fdc54d92c3)**
+#### **workgroup**
 
 
 * Licenses
@@ -418,7 +418,7 @@ Library|Licenses
 ---
 ---
 
-#### **logur (d012c1aa39145e9dc7d0394259dc16438fecb5b9)**
+#### **logur**
 
 
 * Licenses
@@ -457,7 +457,7 @@ Library|Licenses
 ---
 ---
 
-#### **testify (85f2b59c4459e5bf57488796be8c3667cb8246d6)**
+#### **testify**
 
 
 * Licenses
@@ -498,7 +498,7 @@ Library|Licenses
 ---
 ---
 
-#### **render (3215478343fbc559bd3fc08f7031bb134d6bdad5)**
+#### **render**
 
 
 * Licenses
@@ -538,7 +538,7 @@ Library|Licenses
 ---
 ---
 
-#### **chi (063783d4ff01e519755175a21ff821b75e49d3c4)**
+#### **chi**
 
 
 * Licenses
@@ -578,7 +578,7 @@ Library|Licenses
 ---
 ---
 
-#### **go (e369490fb7db5f2d42bb0e8ee19b48378dee0ebf)**
+#### **go**
 
 
 * Licenses
