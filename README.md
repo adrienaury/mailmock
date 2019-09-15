@@ -4,6 +4,7 @@
 [![Github Release Card](https://img.shields.io/github/release/adrienaury/mailmock)](https://github.com/adrienaury/mailmock/releases)
 [![codecov](https://codecov.io/gh/adrienaury/mailmock/branch/master/graph/badge.svg)](https://codecov.io/gh/adrienaury/mailmock)
 [![Build Status](https://travis-ci.org/adrienaury/mailmock.svg?branch=master)](https://travis-ci.org/adrienaury/mailmock)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fadrienaury%2Fmailmock.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fadrienaury%2Fmailmock?ref=badge_shield)
 
 Mailmock is a lightweight SMTP server designed for testing. It exposes a REST API which will enable your CI/CD to check what transaction were made and what was sent to who.
 
@@ -99,6 +100,9 @@ If you are having issues, please let me know.
 I'm Adrien and my mail is adrien.aury@gmail.com
 
 ## License
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fadrienaury%2Fmailmock.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fadrienaury%2Fmailmock?ref=badge_large)
 
 ### Main license
 
