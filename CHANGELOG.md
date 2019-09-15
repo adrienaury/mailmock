@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix build date variable name
 - HTTP Server read and write timeouts
+- Added SMTP replies for session timeout and server shutting down
 
 ### Planned for 0.3.0
 
