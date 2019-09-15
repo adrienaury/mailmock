@@ -283,35 +283,7 @@ func TestClosedConnection(t *testing.T) {
 			"",
 		}, "\r\n")
 	)
-	session, rwc := test(t, snd, rcv)
-
-	var (
-		snd2 string = strings.Join([]string{
-			"HELO localhost",
-		}, "\r\n")
-		rcv2 string = strings.Join([]string{
-			"421 Service not available, closing transmission channel",
-			"",
-		}, "\r\n")
-	)
-
-	test2(t, snd2, rcv2, session, rwc.rcv)
-}
-
-func TestEOFConnection(t *testing.T) {
-	rwc := &EOFConn{}
-
-	c := textproto.NewConn(rwc)
-	assert.NotNil(t, c, "")
-
-	s := smtpd.NewSession(c, nil, nil)
-	assert.NotNil(t, s, "")
-
-	test2(t, strings.Join([]string{
-		"HELO localhost",
-	}, "\r\n"), strings.Join([]string{
-		"",
-	}, "\r\n"), s, rwc)
+	test(t, snd, rcv)
 }
 
 func test(t *testing.T, snd string, rcv string) (s *smtpd.Session, rwc *MockConn) {
@@ -336,12 +308,20 @@ func test(t *testing.T, snd string, rcv string) (s *smtpd.Session, rwc *MockConn
 	return s, rwc
 }
 
-func test2(t *testing.T, snd string, rcv string, s *smtpd.Session, rcvbuf io.Reader) *smtpd.Session {
+func TestEOFConnection(t *testing.T) {
+	rwc := &EOFConn{}
+
+	c := textproto.NewConn(rwc)
+	assert.NotNil(t, c, "")
+
+	s := smtpd.NewSession(c, nil, nil)
+	assert.NotNil(t, s, "")
+
 	s.Serve(make(chan struct{}, 1))
 
-	responses, err := ioutil.ReadAll(rcvbuf)
+	responses, err := ioutil.ReadAll(rwc)
 	assert.NoError(t, err, "")
-	assert.Equal(t, rcv, string(responses), "")
-
-	return s
+	assert.Equal(t, strings.Join([]string{
+		"",
+	}, "\r\n"), string(responses), "")
 }
